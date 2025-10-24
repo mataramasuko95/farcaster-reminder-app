@@ -1,0 +1,24 @@
+﻿# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+build/
+.env
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Misc
+coverage/
