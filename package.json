@@ -5,12 +5,19 @@
     "main":  "index.js",
     "scripts":  {
                     "test":  "echo \"Error: no test specified\" \u0026\u0026 exit 1",
-                    "start":  "node src/index.js"
+                    "start":  "node src/index.js",
+                    "dev":  "node src/index.js"
                 },
     "keywords":  [
 
                  ],
     "author":  "",
     "license":  "ISC",
-    "private":  true
+    "private":  true,
+    "dependencies":  {
+                         "express":  "^4.19.2",
+                         "axios":  "^1.7.7",
+                         "ethers":  "^6.13.4",
+                         "node-cron":  "^3.0.3"
+                     }
 }
