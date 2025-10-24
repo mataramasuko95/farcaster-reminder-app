@@ -13,3 +13,7 @@ pm start then open http://localhost:3000
 - Install: no packages required
 - Run: 
 pm start then open http://localhost:3000
+
+## Docs
+- Proje tasarım dokümanı: `docs/spec.md`
+- API ana dosyası: `src/index.js`
