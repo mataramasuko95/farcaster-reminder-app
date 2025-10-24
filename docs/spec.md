@@ -62,6 +62,16 @@
 - Bu taahhüt Base ağına yazılacak bir işlem olarak hazırlanır; imzalanmamış işlem JSON'u (`unsignedTx`) üretilir ve zincire gönderilmez.
 - İleride bu işlem kullanıcı tarafından imzalanıp zincire konabilir ve Farcaster üzerinde paylaşılabilir.
 
+---
+
+ Notlar (Prototp Durumu)
+
+Bu doküman şu anda çalışan br prototp sürümünü temsl eder.  
+/pay endpont, sahte br oran (1 ETH = 3000 USD) kullanarak ETH hesaplaması yapar  
+ve mzalanmamış şlem (unsgnedTx) üretr.  
+Henüz gerçek mzalama veya zncre gönderm yapılmaz.  
+Farcaster bldrmler de şu anda test (mock) sevyesndedr.
+
 ## Akışlar
 1) Alert oluşturma
    - İstemci POST `/alerts` gönderir.
