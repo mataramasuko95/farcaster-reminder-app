@@ -1,0 +1,16 @@
+﻿{
+    "name":  "codex_projects",
+    "version":  "1.0.0",
+    "description":  "A scratch workspace initialized by Codex CLI.\r ## Node setup",
+    "main":  "index.js",
+    "scripts":  {
+                    "test":  "echo \"Error: no test specified\" \u0026\u0026 exit 1",
+                    "start":  "node src/index.js"
+                },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "private":  true
+}
