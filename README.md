@@ -1,4 +1,4 @@
-﻿# codex_projects
+# codex_projects
 
 A scratch workspace initialized by Codex CLI.
 ## Node setup
@@ -17,3 +17,12 @@ pm start then open http://localhost:3000
 ## Docs
 - Proje tasarım dokümanı: `docs/spec.md`
 - API ana dosyası: `src/index.js`
+
+## Hızlı Demo
+
+1. Sunucuyu başlat
+
+```powershell
+cd C:\Users\PC\codex_projects
+$env:PORT="3055"; npm start
+```
