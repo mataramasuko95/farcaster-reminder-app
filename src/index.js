@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const { upsertAlert, getAlert } = require('./db');
 const { usdToEth } = require('./baseServce');
+const { prepareUnsignedPayment } = require('./payServce');
 const { startScheduler } = require('./scheduler');
 
 const app = express();
@@ -74,6 +75,32 @@ app.post('/alerts', async (req, res) => {
   }
 });
 
+// POST /pay
+// body: { fd:number, ethAddress:string, usdAmount:number }
+// Uses pay service to compute ethNeeded and build unsignedTx JSON (no broadcast)
+app.post('/pay', async (req, res) => {
+  try {
+    const { fd, ethAddress, usdAmount } = req.body || {};
+
+    if (typeof fd !== 'number' || !isFinite(fd)) {
+      return res.status(400).json({ ok: false, error: 'fd (number) required' });
+    }
+    if (!ethAddress || typeof ethAddress !== 'string') {
+      return res.status(400).json({ ok: false, error: 'ethAddress (string) required' });
+    }
+    const usd = Number(usdAmount);
+    if (!isFinite(usd) || usd <= 0) {
+      return res.status(400).json({ ok: false, error: 'usdAmount (number > 0) required' });
+    }
+
+    const result = await prepareUnsignedPayment({ fd, ethAddress, usdAmount: usd });
+    return res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('POST /pay error', err?.message);
+    return res.status(500).json({ ok: false, error: 'internal_error' });
+  }
+});
+
 // GET /alerts/:id
 app.get('/alerts/:id', (req, res) => {
   const { id } = req.params;
@@ -93,7 +120,7 @@ app.get('/casts/:fid', (req, res) => {
 });
 
 app.get('/', (_req, res) => {
-  res.json({ ok: true, service: 'alerts-prototype', endpoints: ['/alerts', '/alerts/:id', '/casts/:fid'] });
+  res.json({ ok: true, service: 'alerts-prototype', endpoints: ['/alerts', '/alerts/:id', '/casts/:fid', '/pay'] });
 });
 
 app.listen(port, () => {

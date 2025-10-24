@@ -41,14 +41,26 @@
 ## API Uçları
 - POST `/alerts`
   - Body: `{ fid:number, datetimeISO:string, note?:string, payUsd?:number }`
-  - Doğrulama, DB’ye kaydetme, payUsd varsa `usdToEth` ile `payAmountEth` hesaplama.
+  - Doğrulama, DB'ye kaydetme, payUsd varsa `usdToEth` ile `payAmountEth` hesaplama.
   - Response: `{ ok, id, payAmountEth?, instruction }`
 
 - GET `/alerts/:id`
   - Tekil alarm detayını döndürür: `{ ok, alert }`.
 
 - GET `/casts/:fid` (mock)
-  - Kullanıcının son cast’lerinden örnek dönülür: `{ ok, casts }`.
+  - Kullanıcının son cast'lerinden örnek dönülür: `{ ok, casts }`.
+
+- POST `/pay`
+  - Body: `{ fd:number, ethAddress:string, usdAmount:number }`
+  - `usdAmount` değerini sabit bir kurla (ör: 1 ETH = 3000 USD) ETH'e çevirir ve `ethNeeded` üretir.
+  - İmzalanmamış bir işlem JSON'u (`unsignedTx`) oluşturur, zincire göndermez.
+  - Basit bir in-memory store'a bir kayıt ekler: `{ fd, usdAmount, ethNeeded, timestamp }`.
+  - Response: `{ ok, fd, usdAmount, ethNeeded, unsignedTx }`
+
+## Ödeme / Taahhüt (pay)
+- Kullanıcı mini app içinde küçük bir taahhüt (ör: 0.05 USD karşılığı ETH) belirler.
+- Bu taahhüt Base ağına yazılacak bir işlem olarak hazırlanır; imzalanmamış işlem JSON'u (`unsignedTx`) üretilir ve zincire gönderilmez.
+- İleride bu işlem kullanıcı tarafından imzalanıp zincire konabilir ve Farcaster üzerinde paylaşılabilir.
 
 ## Akışlar
 1) Alert oluşturma
