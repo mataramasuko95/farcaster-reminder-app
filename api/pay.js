@@ -1,0 +1,57 @@
+// api/pay.js
+
+function usdToEth(usdAmount) {
+  // Mock oran: 1 ETH = 3000 USD
+  const rate = 3000;
+  return usdAmount / rate;
+}
+
+export default async function handler(req, res) {
+  // sadece POST'a izin veriyoruz çünkü kullanıcı gelecekte bir aksiyon planlıyor
+  if (req.method !== "POST") {
+    return res
+      .status(405)
+      .json({ ok: false, error: "Only POST allowed. Send JSON body." });
+  }
+
+  try {
+    // body'den çekiyoruz
+    const { fid, usdAmount, ethAddress } = req.body || {};
+
+    // basic validation
+    if (!fid || !usdAmount || !ethAddress) {
+      return res.status(400).json({
+        ok: false,
+        error: "fid, usdAmount, ethAddress zorunlu",
+        exampleBody: {
+          fid: 1234,
+          usdAmount: 0.05,
+          ethAddress: "0xABCDEF....",
+        },
+      });
+    }
+
+    // ne kadar ETH gerekiyor? (ör: 0.05 USD -> 0.00001667 ETH)
+    const ethNeeded = usdToEth(Number(usdAmount));
+
+    // henüz imzalanmamış tx (broadcast yok)
+    const unsignedTx = {
+      to: ethAddress,
+      valueEth: ethNeeded.toFixed(8),
+      data: "0x",
+    };
+
+    // Farcaster post'una koyacağımız özet
+    return res.status(200).json({
+      ok: true,
+      fid,
+      usdAmount,
+      ethNeeded,
+      unsignedTx,
+      note: "Bu sadece taslak tx. Henüz zincire gönderilmedi.",
+    });
+  } catch (err) {
+    console.error("pay endpoint error:", err);
+    return res.status(500).json({ ok: false, error: "internal_error" });
+  }
+}
