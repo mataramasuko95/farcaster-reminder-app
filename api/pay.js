@@ -1,28 +1,30 @@
 // api/pay.js
 
+// USD -> ETH çevirme (sahte kur: 1 ETH = 3000 USD)
 function usdToEth(usdAmount) {
-  // Mock oran: 1 ETH = 3000 USD
-  const rate = 3000;
-  return usdAmount / rate;
+  const eth = usdAmount / 3000;
+  return eth;
 }
 
-export default async function handler(req, res) {
-  // sadece POST'a izin veriyoruz çünkü kullanıcı gelecekte bir aksiyon planlıyor
+// Vercel edge/serverless formatında default export
+export default function handler(req, res) {
+  // Sadece POST kabul et
   if (req.method !== "POST") {
-    return res
-      .status(405)
-      .json({ ok: false, error: "Only POST allowed. Send JSON body." });
+    return res.status(405).json({
+      ok: false,
+      error: "Only POST allowed. Send JSON body.",
+    });
   }
 
   try {
-    // body'den çekiyoruz
+    // Body'den bilgileri al
     const { fid, usdAmount, ethAddress } = req.body || {};
 
-    // basic validation
+    // Basit validation
     if (!fid || !usdAmount || !ethAddress) {
       return res.status(400).json({
         ok: false,
-        error: "fid, usdAmount, ethAddress zorunlu",
+        error: "fid, usdAmount, ethAddress zorunlu.",
         exampleBody: {
           fid: 1234,
           usdAmount: 0.05,
@@ -31,22 +33,22 @@ export default async function handler(req, res) {
       });
     }
 
-    // ne kadar ETH gerekiyor? (ör: 0.05 USD -> 0.00001667 ETH)
+    // Kaç ETH lazım?
     const ethNeeded = usdToEth(Number(usdAmount));
 
-    // henüz imzalanmamış tx (broadcast yok)
+    // Henüz imzalanmamış tx taslağı
     const unsignedTx = {
       to: ethAddress,
       valueEth: ethNeeded.toFixed(8),
       data: "0x",
     };
 
-    // Farcaster post'una koyacağımız özet
-    return res.status(200).json({
+    // Demo response (henüz zincire göndermiyoruz)
+    return res.json({
       ok: true,
       fid,
       usdAmount,
-      ethNeeded,
+      ethNeeded: Number(ethNeeded.toFixed(8)),
       unsignedTx,
       note: "Bu sadece taslak tx. Henüz zincire gönderilmedi.",
     });
