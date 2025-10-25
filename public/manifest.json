@@ -1,0 +1,43 @@
+{
+  "id": "farcaster-reminder-app",
+  "name": "Reminder / Pay Plan",
+  "description": "Belirli bir tarih/saat için 'yarın şu saatte 100$ ETH alacağım' gibi bir plan kaydet; zamanı gelince hatırlat.",
+  "icon": "https://farcaster-reminder-app.vercel.app/icon.png",
+  "developer": {
+    "name": "mataramasuko95",
+    "url": "https://farcaster-reminder-app.vercel.app"
+  },
+  "website": "https://farcaster-reminder-app.vercel.app",
+  "platforms": [
+    "warpcast"
+  ],
+  "endpoints": {
+    "pay": "https://farcaster-reminder-app.vercel.app/api/pay"
+  },
+  "actions": [
+    {
+      "type": "post",
+      "name": "Plan Kaydet",
+      "description": "Yarın şu saatte şu kadar $ değerinde ETH alacağım diye taahhüt hazırla.",
+      "endpoint": "pay",
+      "input": {
+        "type": "object",
+        "properties": {
+          "fid": {
+            "type": "number",
+            "description": "Farcaster fid'in"
+          },
+          "usdAmount": {
+            "type": "number",
+            "description": "USD cinsinden miktar (ör: 0.05)"
+          },
+          "ethAddress": {
+            "type": "string",
+            "description": "Cüzdan adresin"
+          }
+        },
+        "required": ["fid", "usdAmount", "ethAddress"]
+      }
+    }
+  ]
+}
