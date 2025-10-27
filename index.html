@@ -1,478 +1,365 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
-  />
-  <title>Farcaster Reminder</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Farcaster Reminder</title>
+    <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
-  <!-- Farcaster Mini Apps SDK (for ready() in Preview Tool) -->
-  <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
-
-  <style>
-    /* Global reset-ish */
-    * {
-      box-sizing: border-box;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body {
-      margin: 0;
-      background: #faf6e9; /* warm cream */
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #111;
-      display: flex;
-      justify-content: center;
-    }
-
-    .page {
-      width: 100%;
-      max-width: 420px;
-      padding: 24px 16px 80px;
-    }
-
-    .card {
-      background: #fffefb;
-      border-radius: 16px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
-      padding: 24px 20px 20px;
-    }
-
-    /* Header */
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .header-emoji {
-      font-size: 28px;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .header-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #000;
-    }
-
-    /* Form labels / layout */
-    .section-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #111;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      line-height: 1.4;
-    }
-
-    .section-hint {
-      font-size: 12px;
-      color: #888;
-      font-weight: 400;
-      margin-left: 8px;
-    }
-
-    .note-area {
-      width: 100%;
-      min-height: 72px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      background: #fff;
-      font-size: 15px;
-      line-height: 1.4;
-      padding: 12px 14px;
-      resize: none;
-    }
-    .note-area:focus {
-      outline: 2px solid #000;
-      outline-offset: 0;
-      border-color: #000;
-    }
-
-    .row-inline {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .field {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: calc(50% - 6px);
-    }
-
-    .field-label {
-      display: flex;
-      justify-content: space-between;
-      color: #111;
-      font-weight: 500;
-      font-size: 13px;
-      margin-bottom: 4px;
-      line-height: 1.4;
-    }
-    .field-hint {
-      color: #888;
-      font-weight: 400;
-      font-size: 12px;
-      margin-left: 6px;
-    }
-
-    .text-input {
-      padding: 12px 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-      line-height: 1.3;
-      background: #fff;
-      color: #000;
-    }
-    .text-input:focus {
-      outline: 2px solid #000;
-      outline-offset: 0;
-      border-color: #000;
-    }
-
-    /* Save button */
-    .save-wrap {
-      margin-top: 24px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .save-btn {
-      appearance: none;
-      border: 0;
-      border-radius: 10px;
-      background: #000;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 1.2;
-      padding: 14px 20px;
-      min-width: 140px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-      cursor: pointer;
-    }
-
-    .save-btn:active {
-      transform: scale(0.98);
-    }
-
-    /* Reminders list */
-    .reminder-list-wrap {
-      margin-top: 28px;
-      background: #fffefb;
-      border-radius: 12px;
-      padding: 16px 14px;
-      border: 1px solid rgba(0, 0, 0, 0.07);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
-    }
-
-    .reminder-list-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #000;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .reminder-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .reminder-item {
-      background: #fff;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-      padding: 12px 14px;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .reminder-top {
-      display: flex;
-      justify-content: space-between;
-      font-weight: 500;
-      color: #111;
-      margin-bottom: 4px;
-      gap: 12px;
-    }
-
-    .reminder-note {
-      flex: 1;
-      word-break: break-word;
-    }
-
-    .reminder-datetime {
-      white-space: nowrap;
-      font-size: 13px;
-      color: #444;
-      text-align: right;
-    }
-
-    .reminder-bottom {
-      color: #555;
-      font-size: 12px;
-    }
-
-    .reminder-amount {
-      color: #444;
-      font-weight: 400;
-    }
-
-    /* Small helper text / errors */
-    .error-msg {
-      margin-top: 12px;
-      background: #fff4f4;
-      border: 1px solid #ffbcbf;
-      color: #b00020;
-      font-size: 13px;
-      line-height: 1.4;
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: none;
-    }
-
-    .success-msg {
-      margin-top: 12px;
-      background: #f0fff4;
-      border: 1px solid #acf0c3;
-      color: #035e1d;
-      font-size: 13px;
-      line-height: 1.4;
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: none;
-    }
-
-    /* "invisible" helper not to flash raw JSON */
-    pre#debugRaw {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="card">
-      <!-- HEADER -->
-      <div class="header">
-        <div class="header-emoji">🔔</div>
-        <div class="header-title">Farcaster Reminder</div>
-      </div>
-
-      <!-- REMINDER NOTE FIELD -->
-      <div class="section">
-        <div class="section-label">
-          <span>Reminder Note</span>
-          <span class="section-hint">ex. "Don't forget the meeting at 12:00"</span>
-        </div>
-        <textarea
-          id="noteInput"
-          class="note-area"
-          placeholder='What should we remind you about?'
-        ></textarea>
-      </div>
-
-      <!-- DATE / TIME ROW -->
-      <div class="row-inline">
-        <!-- DATE -->
-        <div class="field">
-          <label class="field-label" for="dateInput">
-            <span>
-              <span class="label-main">Date</span>
-              <span class="field-hint">(dd.mm.yyyy)</span>
-            </span>
-          </label>
-          <input
-            id="dateInput"
-            class="text-input"
-            type="date"
-            required
-          />
-        </div>
-
-        <!-- TIME -->
-        <div class="field">
-          <label class="field-label" for="timeInput">
-            <span>
-              <span class="label-main">Time</span>
-              <span class="field-hint">(hh:mm)</span>
-            </span>
-          </label>
-          <input
-            id="timeInput"
-            class="text-input"
-            type="time"
-            required
-          />
-        </div>
-      </div>
-
-      <!-- SAVE BUTTON -->
-      <div class="save-wrap">
-        <button class="save-btn" id="saveBtn">Save</button>
-      </div>
-
-      <!-- feedback messages -->
-      <div class="error-msg" id="errorBox"></div>
-      <div class="success-msg" id="successBox"></div>
-
-      <!-- LIST OF SAVED REMINDERS -->
-      <div class="reminder-list-wrap">
-        <div class="reminder-list-title">
-          <span>Saved Reminders</span>
-        </div>
-        <div id="reminderList" class="reminder-list"></div>
-      </div>
-
-      <!-- hidden debug pre (keeps old behavior off-screen) -->
-      <pre id="debugRaw"></pre>
-    </div>
-  </div>
-
-  <script>
-  // state
-  let reminders = [];
-
-  async function handleSave() {
-    const noteInput = document.getElementById("noteInput");
-    const dateInput = document.getElementById("dateInput");
-    const timeInput = document.getElementById("timeInput");
-    const statusBox = document.getElementById("statusBox");
-    const listBox = document.getElementById("savedList");
-
-    // clear previous status
-    statusBox.textContent = "";
-
-    const note = noteInput.value.trim();
-    const dateVal = dateInput.value; // "2025-10-27"
-    const timeVal = timeInput.value; // "12:30"
-
-    // basic validation
-    if (!note || !dateVal || !timeVal) {
-      statusBox.textContent = "Please fill note, date and time.";
-      return;
-    }
-
-    // combine date+time into ISO
-    // dateVal is yyyy-mm-dd, timeVal is hh:mm
-    const datetimeISO = new Date(`${dateVal}T${timeVal}:00`).toISOString();
-
-    // 1. locally save reminder
-    const newReminder = {
-      note,
-      datetimeISO,
-    };
-    reminders.push(newReminder);
-
-    // re-render saved reminders list
-    renderSavedList();
-
-    // 2. ask backend to create payment draft
-    try {
-      const res = await fetch("/api/pay", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          note,
-          datetimeISO,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.ok) {
-        statusBox.textContent =
-          "Something went wrong while creating payment draft.";
-        return;
+    <style>
+      body {
+        margin: 0;
+        background-color: #faf6e9;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: #111;
+        display: flex;
+        justify-content: center;
       }
 
-      // Build a human-friendly summary:
-      // ex: "Draft tx -> send 0.00001667 ETH (~$0.05) to 0xABC0..."
-      const toAddr = data.unsignedTx?.to || "";
-      const valEth = data.unsignedTx?.valueEth || "";
-      const usd = data.usdAmount || "";
-      const summary = `Draft tx: send ${valEth} ETH (~$${usd}) to ${toAddr}.`;
+      .page {
+        width: 100%;
+        max-width: 420px;
+        padding: 24px 16px 80px;
+      }
 
-      statusBox.textContent = summary;
-      statusBox.style.color = "#000"; // make sure it's readable
-      statusBox.style.background = "#F5F5F5";
+      .card {
+        background: #fffefb;
+        border-radius: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+        padding: 24px 20px 20px;
+      }
 
-    } catch (err) {
-      console.error("fetch /api/pay failed:", err);
-      statusBox.textContent =
-        "Network error while creating payment draft.";
-    }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
 
-    // 3. clear inputs
-    noteInput.value = "";
-    // keep date/time maybe? up to you
-  }
+      .header-emoji {
+        font-size: 28px;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
 
-  function renderSavedList() {
-    const listBox = document.getElementById("savedList");
-    if (reminders.length === 0) {
-      listBox.innerHTML = "<div class='saved-empty'>No reminders yet.</div>";
-      return;
-    }
+      .header-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #000;
+      }
 
-    listBox.innerHTML = reminders
-      .map((r) => {
-        const dt = new Date(r.datetimeISO);
-        const niceDate = dt.toLocaleString([], {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        return `
-          <div class="saved-item">
-            <div class="saved-note">${escapeHtml(r.note)}</div>
-            <div class="saved-time">${niceDate}</div>
+      .field-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #111;
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .field-hint {
+        font-size: 12px;
+        color: #888;
+        font-weight: 400;
+        margin-left: 8px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 72px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: #fff;
+        font-size: 15px;
+        line-height: 1.4;
+        padding: 12px 14px;
+        resize: none;
+      }
+
+      textarea:focus {
+        outline: 2px solid #000;
+        border-color: #000;
+      }
+
+      .row-inline {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .field {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .text-input {
+        padding: 12px 14px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        line-height: 1.3;
+        background: #fff;
+        color: #000;
+      }
+
+      .text-input:focus {
+        outline: 2px solid #000;
+        border-color: #000;
+      }
+
+      .save-wrap {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .save-btn {
+        border: 0;
+        border-radius: 10px;
+        background: #000;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.2;
+        padding: 14px 20px;
+        min-width: 140px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+      }
+
+      .save-btn:active {
+        transform: scale(0.98);
+      }
+
+      .status-box {
+        margin-top: 16px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        display: none;
+      }
+
+      .status-box.error {
+        background: #fff4f4;
+        border: 1px solid #ffbcbf;
+        color: #b00020;
+        display: block;
+      }
+
+      .status-box.ok {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        color: #000;
+        display: block;
+      }
+
+      .reminder-list-wrap {
+        margin-top: 28px;
+        background: #fffefb;
+        border-radius: 12px;
+        padding: 16px 14px;
+        border: 1px solid rgba(0, 0, 0, 0.07);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+      }
+
+      .reminder-list-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #000;
+        margin-bottom: 12px;
+      }
+
+      .reminder-item {
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        padding: 12px 14px;
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 10px;
+      }
+
+      .reminder-top {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 500;
+        color: #111;
+        margin-bottom: 4px;
+      }
+
+      .reminder-datetime {
+        font-size: 13px;
+        color: #444;
+      }
+
+      .reminder-bottom {
+        font-size: 12px;
+        color: #555;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <div class="card">
+        <div class="header">
+          <div class="header-emoji">🔔</div>
+          <div class="header-title">Farcaster Reminder</div>
+        </div>
+
+        <div>
+          <label class="field-label" for="noteInput">
+            Reminder Note <span class="field-hint">ex. "Team call at 12:00"</span>
+          </label>
+          <textarea id="noteInput"></textarea>
+        </div>
+
+        <div class="row-inline">
+          <div class="field">
+            <label class="field-label" for="dateInput">
+              Date <span class="field-hint">(dd.mm.yyyy)</span>
+            </label>
+            <input id="dateInput" class="text-input" type="date" />
           </div>
-        `;
-      })
-      .join("");
-  }
+          <div class="field">
+            <label class="field-label" for="timeInput">
+              Time <span class="field-hint">(hh:mm)</span>
+            </label>
+            <input id="timeInput" class="text-input" type="time" />
+          </div>
+        </div>
 
-  // small helper for XSS safety
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
+        <div class="save-wrap">
+          <button class="save-btn" id="saveBtn" onclick="handleSave()">Save</button>
+        </div>
 
-  // call once so "No reminders yet." shows on load
-  renderSavedList();
+        <div id="statusBox" class="status-box"></div>
 
-  // connect click
-  window.addEventListener("DOMContentLoaded", () => {
-    const saveBtn = document.getElementById("saveBtn");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", handleSave);
-    }
-  });
-</script>
-</body>
-</html>
+        <div class="reminder-list-wrap">
+          <div class="reminder-list-title">Saved Reminders</div>
+          <div id="reminderList"></div>
+        </div>
+      </div>
+    </div>
 
+    <script>
+      window.onload = () => {
+        if (window.sdk?.actions?.ready) {
+          window.sdk.actions.ready();
+        }
+      };
+
+      const reminders = [];
+
+      async function handleSave() {
+        const noteInput = document.getElementById("noteInput");
+        const dateInput = document.getElementById("dateInput");
+        const timeInput = document.getElementById("timeInput");
+        const statusBox = document.getElementById("statusBox");
+        const reminderList = document.getElementById("reminderList");
+
+        statusBox.className = "status-box";
+        statusBox.style.display = "none";
+
+        const note = noteInput.value.trim();
+        const dateVal = dateInput.value;
+        const timeVal = timeInput.value;
+
+        if (!note || !dateVal || !timeVal) {
+          showError("Please fill in all fields.");
+          return;
+        }
+
+        const datetimeISO = new Date(`${dateVal}T${timeVal}:00`).toISOString();
+
+        try {
+          const res = await fetch("/api/pay", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ note, datetimeISO }),
+          });
+
+          const data = await res.json();
+
+          if (!data.ok) {
+            showError("Something went wrong while creating payment draft.");
+            return;
+          }
+
+          const ethNeeded = data.ethNeeded ?? 0;
+          const usdAmount = data.usdAmount ?? 0;
+          const to = data.unsignedTx?.to ?? "";
+
+          const reminder = {
+            note,
+            dateVal,
+            timeVal,
+            ethNeeded,
+            usdAmount,
+            to,
+          };
+
+          reminders.push(reminder);
+          renderReminders(reminderList);
+
+          showSuccess(
+            `Draft tx: send ${Number(ethNeeded).toFixed(
+              6
+            )} ETH (~$${usdAmount}) to ${to}`
+          );
+
+          noteInput.value = "";
+          dateInput.value = "";
+          timeInput.value = "";
+        } catch (err) {
+          console.error(err);
+          showError("Network error. Please try again.");
+        }
+      }
+
+      function renderReminders(container) {
+        container.innerHTML = "";
+        reminders.forEach((r) => {
+          const div = document.createElement("div");
+          div.className = "reminder-item";
+          div.innerHTML = `
+            <div class="reminder-top">
+              <div>${escapeHtml(r.note)}</div>
+              <div class="reminder-datetime">${r.dateVal} ${r.timeVal}</div>
+            </div>
+            <div class="reminder-bottom">
+              Payment draft: ${Number(r.ethNeeded).toFixed(
+                6
+              )} ETH (~$${r.usdAmount})
+            </div>
+          `;
+          container.prepend(div);
+        });
+      }
+
+      function showError(msg) {
+        const box = document.getElementById("statusBox");
+        box.className = "status-box error";
+        box.textContent = msg;
+      }
+
+      function showSuccess(msg) {
+        const box = document.getElementById("statusBox");
+        box.className = "status-box ok";
+        box.textContent = msg;
+      }
+
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+    </script>
+  </body>
 </html>
 
