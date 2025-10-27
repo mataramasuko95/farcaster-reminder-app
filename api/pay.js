@@ -1,14 +1,15 @@
 // api/pay.js
+// This serverless function creates a mock "payment draft" for the reminder.
+// It does NOT actually send a transaction onchain.
 
-// Bu fonksiyon sahte bir USD -> ETH hesaplıyor.
-// 1 ETH = 3000 USD varsaydık.
-// Gerçekte burayı oracle vs ile güncelleyeceğiz.
 function usdToEth(usdAmount) {
-  const eth = usdAmount / 3000;
-  return eth;
+  // fake rate: 1 ETH = 3000 USD
+  const rate = 3000;
+  return usdAmount / rate;
 }
 
 module.exports = function handler(req, res) {
+  // only allow POST
   if (req.method !== "POST") {
     return res.status(405).json({
       ok: false,
@@ -17,86 +18,53 @@ module.exports = function handler(req, res) {
   }
 
   try {
-    // Frontend bize bunları yollayacak:
-    // noteText: kullanıcının yazdığı hatırlatma
-    // remindAtIso: seçtiği tarih-saat (datetime-local'dan geliyor)
-    // fid: şimdilik sabit 1234 tutuyoruz
-    // usdAmount: ödenecek ücret (sabit 0.05 dolar gibi düşünebiliriz)
-    // ethAddress: nereye ödeyeceğiz (bizim cüzdan adresimiz)
-    const {
-      fid,
-      usdAmount,
-      ethAddress,
-      noteText,
-      remindAtIso,
-    } = req.body || {};
+    // we expect { note, datetimeISO } from the client
+    const { note, datetimeISO } = req.body || {};
 
-    // Basit kontrol: hepsi var mı?
-    if (
-      !fid ||
-      !usdAmount ||
-      !ethAddress ||
-      !noteText ||
-      !remindAtIso
-    ) {
+    // basic validation
+    if (!note || !datetimeISO) {
       return res.status(400).json({
         ok: false,
-        error:
-          "Missing required fields. Gerekli alanlar: fid, usdAmount, ethAddress, noteText, remindAtIso",
-        required: ["fid","usdAmount","ethAddress","noteText","remindAtIso"],
-        got: { fid, usdAmount, ethAddress, noteText, remindAtIso }
+        error: "note and datetimeISO are required.",
+        exampleBody: {
+          note: "Pay rent",
+          datetimeISO: "2025-10-27T12:30:00.000Z",
+        },
       });
     }
 
-    // zamanı parse edebiliyor muyuz (geçerli tarih mi)
-    const ts = Date.parse(remindAtIso);
-    if (Number.isNaN(ts)) {
-      return res.status(400).json({
-        ok: false,
-        error: "remindAtIso geçerli bir tarih değil.",
-        example: "2025-10-28T10:30:00Z"
-      });
-    }
+    // mock fixed values
+    const fid = 1234;
+    const usdAmount = 0.05;
+    const ethAddress = "0xABC01234567890abcdef1234567890ABCDEF12";
 
-    // Kaç ETH lazım (float)
-    const ethNeeded = usdToEth(Number(usdAmount));
+    // convert USD to ETH
+    const ethNeeded = usdToEth(usdAmount);
+    const valueEthStr = ethNeeded.toFixed(8); // "0.00001667" style
 
-    // ETH -> wei string (18 decimal). Farcaster cüzdanına value olarak bunu vereceğiz.
-    // Örnek: 0.00001667 ETH -> "16670000000000" wei
-    const weiBigInt = BigInt(Math.round(ethNeeded * 1e18));
-    const weiString = weiBigInt.toString();
-
-    // Kullanıcı imzalayıp göndereceği tx taslağı:
-    // chainId: Base mainnet = 8453
-    // to:    ethAddress (biz belirliyoruz)
-    // value: wei cinsinden string
-    // data:  "0x" (ekstra calldata yok)
-    const tx = {
-      chainId: 8453,
+    // make a (not-sent) tx draft object
+    const unsignedTx = {
       to: ethAddress,
-      value: weiString,
-      data: "0x",
+      valueEth: valueEthStr,
+      data: "0x", // no calldata for now
     };
 
-    // Cevap olarak şunu döneriz:
-    // - ok: true
-    // - reminder: kullanıcının notu ve zamanı (bunu ileride DB'ye kaydedip programlayacağız)
-    // - tx: cüzdana gönderilecek işlem (frontend bunu kullanıp farcaster wallet'ı çağıracak)
     return res.status(200).json({
       ok: true,
-      reminder: {
-        text: noteText,
-        when: remindAtIso,
-        fid: fid,
-      },
-      tx,
-      note: "Bu tx henüz imzalanmadı/gönderilmedi. Frontend farcaster cüzdanıyla gönderecek."
+      message: "Draft only. Not sent.",
+      fid,
+      note,
+      datetimeISO,
+      usdAmount,
+      ethNeeded,
+      unsignedTx,
     });
   } catch (err) {
-    console.error("pay error:", err);
+    console.error("pay.js error:", err);
     return res.status(500).json({
       ok: false,
-      error: "Beklenmeyen bir hata oldu.",
+      error: "Unexpected server error while building draft.",
     });
   }
 };
+
