@@ -5,9 +5,8 @@
   <title>Yeni Not</title>
 
   <style>
-    /* sayfa genel */
     body {
-      background-color: #fdfbef; /* notlar uygulaması gibi hafif krem */
+      background-color: #fdfbef;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
       color: #1a1a1a;
       margin: 0;
@@ -25,7 +24,6 @@
       padding: 32px 16px 80px;
     }
 
-    /* üst başlık */
     .header {
       text-align: center;
       margin-bottom: 24px;
@@ -46,8 +44,8 @@
       line-height: 1.2rem;
     }
 
-    /* not alanı kartı */
-    .note-card {
+    .note-card,
+    .time-card {
       background-color: #fffef6;
       border: 1px solid #e6e2c8;
       box-shadow:
@@ -57,6 +55,7 @@
       padding: 16px 16px 12px;
       display: flex;
       flex-direction: column;
+      margin-bottom: 16px;
     }
 
     .note-label {
@@ -82,7 +81,22 @@
       color: #b0a88a;
     }
 
-    /* buton alanı */
+    input[type="datetime-local"] {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      line-height: 1.4rem;
+      color: #1a1a1a;
+      outline: none;
+      padding: 4px 0;
+      font-family: inherit;
+    }
+
+    input[type="datetime-local"]::placeholder {
+      color: #b0a88a;
+    }
+
     .actions {
       margin-top: 20px;
       display: flex;
@@ -108,7 +122,6 @@
       background-color: #000;
     }
 
-    /* durum mesajı */
     .status-wrapper {
       margin-top: 16px;
       min-height: 32px;
@@ -120,7 +133,7 @@
     }
 
     .status-ok {
-      color: #2e7d32; /* hafif yeşilimsi */
+      color: #2e7d32;
       font-weight: 500;
     }
 
@@ -129,7 +142,6 @@
       font-weight: 500;
     }
 
-    /* debug teknik bilgi kutusu - kullanıcı normalde görmez ama biz istersek açarız */
     .debug-toggle {
       margin-top: 24px;
       text-align: center;
@@ -157,7 +169,6 @@
     }
   </style>
 
-  <!-- ileride Farcaster actions / signer için kullanacağız -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 </head>
 
@@ -166,10 +177,10 @@
     <!-- HEADER -->
     <div class="header">
       <div class="title">Yeni Not</div>
-      <div class="subtitle">Hatırlatmanı yaz, “Kaydet” de. Gerisini biz hallederiz.</div>
+      <div class="subtitle">Hatırlatmanı ve zamanı gir. Kaydet’e bas. Gerisini biz hallederiz.</div>
     </div>
 
-    <!-- NOTE CARD -->
+    <!-- NOTE INPUT -->
     <div class="note-card">
       <div class="note-label">Not metni</div>
       <textarea
@@ -178,17 +189,24 @@
       ></textarea>
     </div>
 
+    <!-- TIME INPUT -->
+    <div class="time-card">
+      <div class="note-label">Hatırlatma zamanı</div>
+      <input
+        id="timeInput"
+        type="datetime-local"
+      />
+    </div>
+
     <!-- SAVE BUTTON -->
     <div class="actions">
       <button class="save-btn" onclick="handleSave()">Kaydet</button>
     </div>
 
     <!-- STATUS -->
-    <div class="status-wrapper" id="statusBox">
-      <!-- buraya 'Kaydedildi ✅' vs yazacağız -->
-    </div>
+    <div class="status-wrapper" id="statusBox"></div>
 
-    <!-- DEV/DEBUG -->
+    <!-- DEBUG -->
     <div class="debug-toggle" onclick="toggleDebug()">
       Teknik detayları göster / gizle
     </div>
@@ -198,19 +216,24 @@
   <script>
     async function handleSave() {
       const noteText = document.getElementById("noteInput").value.trim();
+      const remindAt = document.getElementById("timeInput").value;
       const statusBox = document.getElementById("statusBox");
 
       if (!noteText) {
-        statusBox.innerHTML = `<span class="status-err">Boş notu kaydedemem 🙃</span>`;
+        statusBox.innerHTML = `<span class="status-err">Not boş olamaz 🙃</span>`;
+        return;
+      }
+      if (!remindAt) {
+        statusBox.innerHTML = `<span class="status-err">Zaman seçmelisin ⏰</span>`;
         return;
       }
 
-      // Bu request backend'e not'u gönderiyor.
-      // İleride backend bu not için zincire gidecek tx planını üretir.
-      // Şimdilik sahte FID vb. göndermeye devam ediyoruz, ama amount/eth'i UI'da göstermiyoruz.
+      // remindAt tarayıcıdan "2025-10-28T10:30" gibi gelir
+      // backend'e bu şekilde göndereceğiz.
       const body = {
-        fid: 1234, // ileride gerçek kullanıcıya göre
-        note: noteText
+        fid: 1234,
+        note: noteText,
+        remindAt: remindAt
       };
 
       try {
@@ -223,18 +246,18 @@
         const data = await res.json();
         console.log("Sunucu cevabı:", data);
 
-        // başarılı mı?
         if (data && data.ok) {
           statusBox.innerHTML = `<span class="status-ok">Kaydedildi ✅</span>`;
         } else {
           statusBox.innerHTML = `<span class="status-err">Kaydedilemedi ❌</span>`;
         }
 
-        // geliştirici olarak yine elimizde olsun diye debug'a basıyoruz
         renderDebug(data);
 
-        // textarea'yı temizleyelim (not girildi sayalım)
+        // formu temizle
         document.getElementById("noteInput").value = "";
+        // zamanı temizlemek istersen:
+        document.getElementById("timeInput").value = "";
 
       } catch (err) {
         console.error("Hata:", err);
@@ -250,9 +273,10 @@
 
     function toggleDebug() {
       const box = document.getElementById("debugBox");
-      box.style.display = (box.style.display === "none" || box.style.display === "")
-        ? "block"
-        : "none";
+      box.style.display =
+        (box.style.display === "none" || box.style.display === "")
+          ? "block"
+          : "none";
     }
   </script>
 </body>
