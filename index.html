@@ -1,284 +1,204 @@
 <!DOCTYPE html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Yeni Not</title>
-
-  <style>
-    body {
-      background-color: #fdfbef;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
-      color: #1a1a1a;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-    }
-
-    .page {
-      width: 100%;
-      max-width: 480px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 32px 16px 80px;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #3a3a3a;
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      font-size: 0.8rem;
-      font-weight: 400;
-      color: #8a8a8a;
-      margin-top: 4px;
-      line-height: 1.2rem;
-    }
-
-    .note-card,
-    .time-card {
-      background-color: #fffef6;
-      border: 1px solid #e6e2c8;
-      box-shadow:
-        0 24px 40px -16px rgba(0,0,0,0.08),
-        0 2px 4px rgba(0,0,0,0.04);
-      border-radius: 12px;
-      padding: 16px 16px 12px;
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 16px;
-    }
-
-    .note-label {
-      font-size: 0.75rem;
-      color: #7a7657;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 140px;
-      resize: none;
-      border: none;
-      background: transparent;
-      font-size: 1rem;
-      line-height: 1.4rem;
-      color: #1a1a1a;
-      outline: none;
-    }
-
-    textarea::placeholder {
-      color: #b0a88a;
-    }
-
-    input[type="datetime-local"] {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-size: 1rem;
-      line-height: 1.4rem;
-      color: #1a1a1a;
-      outline: none;
-      padding: 4px 0;
-      font-family: inherit;
-    }
-
-    input[type="datetime-local"]::placeholder {
-      color: #b0a88a;
-    }
-
-    .actions {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .save-btn {
-      background-color: #1a1a1a;
-      color: #fff;
-      border: 0;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      line-height: 1rem;
-      font-weight: 500;
-      padding: 12px 20px;
-      min-width: 120px;
-      cursor: pointer;
-      box-shadow: 0 10px 20px -6px rgba(0,0,0,0.4);
-      transition: background-color 0.12s ease;
-    }
-
-    .save-btn:hover {
-      background-color: #000;
-    }
-
-    .status-wrapper {
-      margin-top: 16px;
-      min-height: 32px;
-      text-align: center;
-      font-size: 0.8rem;
-      line-height: 1.2rem;
-      color: #4a4a4a;
-      white-space: pre-line;
-    }
-
-    .status-ok {
-      color: #2e7d32;
-      font-weight: 500;
-    }
-
-    .status-err {
-      color: #b00020;
-      font-weight: 500;
-    }
-
-    .debug-toggle {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 0.7rem;
-      color: #90885d;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    pre {
-      margin-top: 8px;
-      background: #1e1e1e;
-      color: #c6f68d;
-      font-size: 0.7rem;
-      line-height: 1rem;
-      padding: 12px;
-      border-radius: 8px;
-      overflow-x: auto;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    #debugBox {
-      display: none;
-    }
-  </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
-</head>
-
-<body>
-  <div class="page">
-    <!-- HEADER -->
-    <div class="header">
-      <div class="title">Yeni Not</div>
-      <div class="subtitle">Hatırlatmanı ve zamanı gir. Kaydet’e bas. Gerisini biz hallederiz.</div>
-    </div>
-
-    <!-- NOTE INPUT -->
-    <div class="note-card">
-      <div class="note-label">Not metni</div>
-      <textarea
-        id="noteInput"
-        placeholder="Örn: 'Yarın 10:00'da X kişisine ödeme hatırlat.'"
-      ></textarea>
-    </div>
-
-    <!-- TIME INPUT -->
-    <div class="time-card">
-      <div class="note-label">Hatırlatma zamanı</div>
-      <input
-        id="timeInput"
-        type="datetime-local"
-      />
-    </div>
-
-    <!-- SAVE BUTTON -->
-    <div class="actions">
-      <button class="save-btn" onclick="handleSave()">Kaydet</button>
-    </div>
-
-    <!-- STATUS -->
-    <div class="status-wrapper" id="statusBox"></div>
-
-    <!-- DEBUG -->
-    <div class="debug-toggle" onclick="toggleDebug()">
-      Teknik detayları göster / gizle
-    </div>
-    <pre id="debugBox">{}</pre>
-  </div>
-
-  <script>
-    async function handleSave() {
-      const noteText = document.getElementById("noteInput").value.trim();
-      const remindAt = document.getElementById("timeInput").value;
-      const statusBox = document.getElementById("statusBox");
-
-      if (!noteText) {
-        statusBox.innerHTML = `<span class="status-err">Not boş olamaz 🙃</span>`;
-        return;
-      }
-      if (!remindAt) {
-        statusBox.innerHTML = `<span class="status-err">Zaman seçmelisin ⏰</span>`;
-        return;
+  <head>
+    <meta charset="UTF-8" />
+    <title>Farcaster Reminder Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+        background-color: #fafafa;
+        color: #111;
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
-      // remindAt tarayıcıdan "2025-10-28T10:30" gibi gelir
-      // backend'e bu şekilde göndereceğiz.
-      const body = {
-        fid: 1234,
-        note: noteText,
-        remindAt: remindAt
-      };
+      .card {
+        max-width: 480px;
+        width: 100%;
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        padding: 20px 24px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+      }
 
-      try {
-        const res = await fetch("/api/pay", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+      .header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
 
-        const data = await res.json();
-        console.log("Sunucu cevabı:", data);
+      .header-icon {
+        font-size: 32px;
+      }
 
-        if (data && data.ok) {
-          statusBox.innerHTML = `<span class="status-ok">Kaydedildi ✅</span>`;
-        } else {
-          statusBox.innerHTML = `<span class="status-err">Kaydedilemedi ❌</span>`;
+      .title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 8px 0 4px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.4;
+      }
+
+      .field-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #444;
+        margin: 16px 0 6px;
+        display: block;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 80px;
+        resize: none;
+        border: 1px solid #dcdcdc;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 15px;
+        line-height: 1.4;
+        font-family: inherit;
+        background-color: #fff;
+        box-sizing: border-box;
+        outline: none;
+      }
+      textarea:focus {
+        border-color: #007aff;
+        box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+      }
+
+      input[type="datetime-local"] {
+        width: 100%;
+        border: 1px solid #dcdcdc;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 15px;
+        background-color: #fff;
+        outline: none;
+        box-sizing: border-box;
+      }
+      input[type="datetime-local"]:focus {
+        border-color: #007aff;
+        box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+      }
+
+      .save-row {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        background: #111;
+        color: #fff;
+        font-size: 15px;
+        line-height: 1.2;
+        font-weight: 500;
+        padding: 12px 16px;
+        cursor: pointer;
+        min-width: 120px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      }
+      button:active {
+        transform: scale(.98);
+      }
+
+      .output-wrapper {
+        max-width: 480px;
+        width: 100%;
+        background: #f5f5f5;
+        border: 1px solid #e1e1e1;
+        border-radius: 8px;
+        padding: 16px;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.4;
+        color: #222;
+        margin-top: 24px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <script>
+      async function submitReminder() {
+        // form alanlarını al
+        const note = document.getElementById("note").value.trim();
+        const when = document.getElementById("when").value;
+
+        // basit doğrulama
+        if (!note) {
+          showOutput({ ok:false, error:"Lütfen bir not yaz." });
+          return;
+        }
+        if (!when) {
+          showOutput({ ok:false, error:"Lütfen bir zaman seç." });
+          return;
         }
 
-        renderDebug(data);
+        // backend'e yollayacağımız body
+        const body = {
+          note,          // kullanıcı yazdığı metin
+          remindAtISO: when // datetime-local -> ISO string gibi davranıyoruz
+        };
 
-        // formu temizle
-        document.getElementById("noteInput").value = "";
-        // zamanı temizlemek istersen:
-        document.getElementById("timeInput").value = "";
+        try {
+          const res = await fetch("/api/reminder", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+          });
 
-      } catch (err) {
-        console.error("Hata:", err);
-        statusBox.innerHTML = `<span class="status-err">Bir şeyler ters gitti ❌</span>`;
-        renderDebug(err);
+          const data = await res.json();
+          showOutput(data);
+
+        } catch (err) {
+          showOutput({ ok:false, error:"İstek gönderilirken hata oluştu.", detail: String(err) });
+        }
       }
-    }
 
-    function renderDebug(dataOrErr) {
-      const box = document.getElementById("debugBox");
-      box.textContent = JSON.stringify(dataOrErr, null, 2);
-    }
+      function showOutput(obj) {
+        const box = document.getElementById("output");
+        box.textContent = JSON.stringify(obj, null, 2);
+      }
+    </script>
+  </head>
 
-    function toggleDebug() {
-      const box = document.getElementById("debugBox");
-      box.style.display =
-        (box.style.display === "none" || box.style.display === "")
-          ? "block"
-          : "none";
-    }
-  </script>
-</body>
+  <body>
+    <div class="card">
+      <div class="header">
+        <div class="header-icon">🔔</div>
+        <div class="title">Farcaster Reminder Mini App</div>
+        <div class="subtitle">
+          Hatırlatma notunu yaz, ne zaman ping almak istediğini seç, kaydet.
+        </div>
+      </div>
+
+      <label class="field-label" for="note">Hatırlatma Notu</label>
+      <textarea id="note" placeholder="Örn: &quot;Yarın 14:30'da @soandso'ya yaz&quot;"></textarea>
+
+      <label class="field-label" for="when">Ne zaman hatırlatayım?</label>
+      <input id="when" type="datetime-local" />
+
+      <div class="save-row">
+        <button onclick="submitReminder()">Kaydet</button>
+      </div>
+    </div>
+
+    <pre id="output" class="output-wrapper">
+Sonuç burada görünecek...
+    </pre>
+  </body>
 </html>
 
