@@ -1,4 +1,3 @@
-// usdToEth
 function usdToEth(usdAmount) {
   const eth = usdAmount / 3000;
   return eth;
@@ -51,4 +50,3 @@ module.exports = function handler(req, res) {
     });
   }
 };
-
