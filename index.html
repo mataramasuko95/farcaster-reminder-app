@@ -1,287 +1,494 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <title>Farcaster Reminder</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Farcaster Mini Apps SDK (Preview Tool bunu görünce "ready" uyarısını kaldırıyor) -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
   <style>
-    :root{
-      --bg:#fbf5e8;
-      --card:#fff;
-      --muted:#a08f80;
-      --accent:#000;
-      --accent-2:#f6e7d0;
+    :root {
+      --bg: #fffcf4;
+      --card-bg: #fffdf8;
+      --border: #e8e2cc;
+      --text-main: #1a1a1a;
+      --text-dim: #6b6555;
+      --accent-bg: #fff5cc;
+      --accent-border: #e2c76b;
+      --accent-icon: #d4aa00;
+      --error-bg: #ffe5e5;
+      --error-border: #ffb3b3;
+      --error-text: #a40000;
+      --btn-bg: #000;
+      --btn-text: #fff;
+      --radius-lg: 8px;
+      --radius-md: 6px;
+      --radius-sm: 4px;
+      --shadow-card: 0 20px 40px rgba(0,0,0,0.05);
+      --shadow-focus: 0 0 0 3px rgba(0,0,0,0.08);
+      --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Segoe UI", sans-serif;
     }
-    body{
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+
+    body {
       background: var(--bg);
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:40px 16px;
-    }
-    .wrap{
-      width:380px;
-      max-width:95%;
-      background:var(--card);
-      border-radius:12px;
-      box-shadow: 0 8px 20px rgba(20,20,20,0.08);
-      padding:28px;
-      box-sizing:border-box;
-    }
-    .icon{
-      font-size:34px;
-      width:50px;
-      height:50px;
-      border-radius:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin:0 auto 6px;
-      background: linear-gradient(#fff,#fff);
-    }
-    h1{
-      text-align:center;
-      margin:0 0 14px;
-      font-size:22px;
-    }
-    p.lead{
-      text-align:center;
-      color:var(--muted);
-      font-size:14px;
-      margin:0 0 18px;
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      margin: 0;
+      padding: 24px 16px 80px;
+      display: flex;
+      justify-content: center;
+      line-height: 1.4;
     }
 
-    label{
-      display:block;
-      font-size:13px;
-      color:var(--muted);
-      margin-bottom:6px;
-    }
-    textarea, input[type="date"], input[type="time"], input[type="text"]{
-      width:100%;
-      box-sizing:border-box;
-      padding:12px 14px;
-      border-radius:8px;
-      border:1px solid #efe6d8;
-      background:#fff;
-      font-size:14px;
-      color:#222;
-    }
-    .row{display:flex; gap:12px; margin-top:10px;}
-    .row .col{flex:1}
-
-    button.save{
-      display:block;
-      width:100%;
-      margin-top:18px;
-      background:#000;
-      color:#fff;
-      padding:14px;
-      border-radius:10px;
-      border:0;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    .wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      border-radius: var(--radius-lg);
+      max-width: 500px;
+      width: 100%;
+      padding: 24px 20px 32px;
     }
 
-    .msg{
-      margin-top:14px;
-      padding:12px;
-      border-radius:8px;
-      background:#ffecec;
-      color:#8a1f1f;
-      display:none;
+    header {
+      text-align: center;
+      margin-bottom: 16px;
     }
 
-    .savedBox{
-      margin-top:18px;
-      padding:14px;
-      border-radius:10px;
-      background:var(--accent-2);
-      border:1px solid #f0e5d8;
+    .bell-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      color: var(--accent-icon);
+      font-size: 20px;
+      margin-bottom: 8px;
+      line-height: 1;
     }
-    .remItem{
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 0 0 8px 0;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin: 0;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr;
+      row-gap: 16px;
+      margin-top: 16px;
+    }
+
+    .field-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field-label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+      row-gap: 4px;
+    }
+
+    .field-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    textarea,
+    input[type="text"],
+    input[type="date"],
+    input[type="time"] {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.4;
+      padding: 12px 12px;
+      color: var(--text-main);
       background: #fff;
-      padding:12px;
-      border-radius:8px;
-      border:1px solid #efe6d8;
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
     }
-    .muted{color:var(--muted); font-size:13px}
-    .txLine{font-size:13px; color:#444; margin-top:6px}
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    input:focus {
+      outline: none;
+      border-color: #000;
+      box-shadow: var(--shadow-focus);
+      background: #fff;
+    }
+
+    .row-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 12px;
+    }
+
+    .btn-save {
+      appearance: none;
+      border: 0;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-save:active {
+      opacity: 0.9;
+    }
+
+    .error-box {
+      display: none;
+      background: var(--error-bg);
+      color: var(--error-text);
+      border: 1px solid var(--error-border);
+      font-size: 14px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      margin-top: 8px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .list-card {
+      background: #fffdf8;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-top: 24px;
+      padding: 16px;
+    }
+
+    .list-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 0 0 12px 0;
+    }
+
+    .empty-hint {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin: 0;
+    }
+
+    .reminder-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+      background: #fff;
+      margin-bottom: 10px;
+    }
+
+    .rem-top-row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      row-gap: 4px;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .rem-note {
+      word-break: break-word;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .rem-when {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .rem-draft {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 16px 12px 60px;
+      }
+      .wrap {
+        padding: 20px 16px 28px;
+        border-radius: var(--radius-md);
+      }
+      .row-2col {
+        grid-template-columns: 1fr 1fr;
+        column-gap: 8px;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <div class="wrap" role="main">
-    <div class="icon">🔔</div>
-    <h1>Farcaster Reminder</h1>
-    <p class="lead">Write a reminder and pick a date/time. Save will prepare a payment draft.</p>
+  <div class="wrap">
+    <header>
+      <div class="bell-icon">🔔</div>
+      <h1 class="title">Farcaster Reminder</h1>
+      <p class="subtitle">
+        Write a reminder and pick a date/time. Save will prepare a payment draft.
+      </p>
+    </header>
 
-    <div>
-      <label for="note">Reminder Note <span class="muted">ex. "Team call at 12:00"</span></label>
-      <textarea id="note" rows="4" placeholder="Write your reminder..."></textarea>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label for="date">Date <span class="muted">(dd.mm.yyyy)</span></label>
-        <input id="date" type="date"/>
+    <form id="reminderForm">
+      <!-- Reminder Note -->
+      <div class="field-block">
+        <div class="field-label-row">
+          <label class="field-label" for="noteInput">Reminder Note</label>
+          <div class="field-hint">ex. "Team call at 12:00"</div>
+        </div>
+        <textarea id="noteInput" placeholder="Write your reminder..."></textarea>
       </div>
-      <div class="col">
-        <label for="time">Time <span class="muted">(hh:mm)</span></label>
-        <input id="time" type="time"/>
+
+      <!-- Date / Time -->
+      <div class="row-2col">
+        <div class="field-block">
+          <div class="field-label-row">
+            <label class="field-label" for="dateInput">Date</label>
+            <div class="field-hint">(dd.mm.yyyy)</div>
+          </div>
+          <input
+            id="dateInput"
+            type="date"
+            style="font-family: inherit;"
+          />
+        </div>
+
+        <div class="field-block">
+          <div class="field-label-row">
+            <label class="field-label" for="timeInput">Time</label>
+            <div class="field-hint">(hh:mm)</div>
+          </div>
+          <input
+            id="timeInput"
+            type="time"
+            style="font-family: inherit;"
+          />
+        </div>
       </div>
-    </div>
 
-    <button class="save" id="saveBtn">Save</button>
+      <!-- Save button -->
+      <button id="saveBtn" type="button" class="btn-save">Save</button>
 
-    <div class="msg" id="msgBox"></div>
+      <!-- error box -->
+      <div id="errorBox" class="error-box"></div>
+    </form>
 
-    <div class="savedBox">
-      <div style="font-weight:700; margin-bottom:8px">Saved Reminders</div>
-      <div id="savedList"></div>
-    </div>
+    <!-- Saved list -->
+    <section class="list-card" id="savedSection">
+      <h2 class="list-title">Saved Reminders</h2>
+      <div id="savedList">
+        <p class="empty-hint">No saved reminders yet.</p>
+      </div>
+    </section>
   </div>
 
   <script>
-    // Call Farcaster SDK ready if present
+    // Farcaster ready() çağrısı: Preview Tool'daki "Ready not called" uyarısını yok eder
     window.onload = () => {
-      try {
-        if (window.sdk?.actions?.ready) {
-          window.sdk.actions.ready();
-        }
-      } catch (e) {
-        // ignore
+      if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
+        window.sdk.actions.ready();
       }
     };
 
-    // Helpers
-    function showMsg(text, isError = true) {
-      const box = document.getElementById('msgBox');
-      box.style.display = 'block';
-      box.style.background = isError ? '#ffecec' : '#e6ffe9';
-      box.style.color = isError ? '#8a1f1f' : '#1f6f2f';
-      box.innerText = text;
-      setTimeout(()=> { box.style.display = 'none'; }, 7000);
+    // SABİT VERİLER (şimdilik hardcode)
+    const FIXED_FID = 1234; // ileride gerçek Farcaster FID'i ile değişecek
+    const FIXED_USD = 0.05; // her hatırlatma için kullanıcıdan istenen USD tutarı
+    const FIXED_RECEIVER = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772"; // senin adresin
+
+    const formEl = document.getElementById("reminderForm");
+    const noteEl = document.getElementById("noteInput");
+    const dateEl = document.getElementById("dateInput");
+    const timeEl = document.getElementById("timeInput");
+    const saveBtn = document.getElementById("saveBtn");
+    const errorBox = document.getElementById("errorBox");
+    const savedList = document.getElementById("savedList");
+
+    // Yardımcı: ISO datetime oluştur
+    function buildISO(dateStr, timeStr) {
+      // input[type="date"] -> "2025-10-04"
+      // input[type="time"] -> "19:05"
+      if (!dateStr || !timeStr) return null;
+      // local --> "2025-10-04T19:05:00"
+      return `${dateStr}T${timeStr}:00`;
     }
 
-    function formatDateForDisplay(dateStr, timeStr) {
-      if (!dateStr) return '';
-      const d = new Date(dateStr + 'T' + (timeStr || '00:00'));
-      // dd.mm.yyyy hh:mm
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const min = String(d.getMinutes()).padStart(2,'0');
-      return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+    // Reminder'ı DOM listesine ekle
+    function appendReminderToList(reminder) {
+      // reminder: { note, whenText, draftText }
+      if (!reminder) return;
+      // eğer "No saved reminders yet." varsa temizle
+      if (savedList.firstElementChild && savedList.firstElementChild.classList.contains("empty-hint")) {
+        savedList.innerHTML = "";
+      }
+
+      const item = document.createElement("div");
+      item.className = "reminder-item";
+
+      const topRow = document.createElement("div");
+      topRow.className = "rem-top-row";
+
+      const noteDiv = document.createElement("div");
+      noteDiv.className = "rem-note";
+      noteDiv.textContent = reminder.note || "(no note)";
+
+      const whenDiv = document.createElement("div");
+      whenDiv.className = "rem-when";
+      whenDiv.textContent = reminder.whenText || "";
+
+      topRow.appendChild(noteDiv);
+      topRow.appendChild(whenDiv);
+
+      const draftDiv = document.createElement("div");
+      draftDiv.className = "rem-draft";
+      draftDiv.textContent = reminder.draftText || "";
+
+      item.appendChild(topRow);
+      item.appendChild(draftDiv);
+
+      savedList.appendChild(item);
     }
 
-    function loadSaved() {
-      const raw = localStorage.getItem('reminders_v1') || '[]';
-      const arr = JSON.parse(raw);
-      const target = document.getElementById('savedList');
-      target.innerHTML = '';
-      if (!arr.length) {
-        target.innerHTML = '<div class="muted">No saved reminders yet.</div>';
+    // Hata göster
+    function showError(msg) {
+      errorBox.style.display = "block";
+      errorBox.textContent = msg;
+    }
+    function hideError() {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+
+    async function handleSave() {
+      hideError();
+
+      const noteVal = noteEl.value.trim();
+      const dateVal = dateEl.value; // "2025-10-04"
+      const timeVal = timeEl.value; // "19:05"
+      const iso = buildISO(dateVal, timeVal);
+
+      if (!noteVal || !iso) {
+        showError("Please fill note, date and time.");
         return;
       }
-      arr.slice().reverse().forEach(r => {
-        const el = document.createElement('div');
-        el.className = 'remItem';
-        el.innerHTML = '<div><div style="font-weight:600;">'+escapeHtml(r.note)+'</div>'
-          + '<div class="muted">'+formatDateForDisplay(r.date, r.time)+'</div>'
-          + (r.txDraft ? ('<div class="txLine">Payment draft: '+escapeHtml(r.txDraft.valueEth)+' ETH (~$'+(Number(r.usdAmount)||0)+')</div>') : '')
-          + '</div>'
-          + '<div style="text-align:right;color:#666;font-size:12px;">'+(r.savedAt||'')+'</div>';
-        target.appendChild(el);
-      });
-    }
 
-    function escapeHtml(s){
-      if (!s) return '';
-      return String(s).replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-    }
+      // backend'in beklediği alanları gönderiyoruz
+      const body = {
+        fid: FIXED_FID,
+        usdAmount: FIXED_USD,
+        ethAddress: FIXED_RECEIVER,
+        // bunlar backend'e extra bilgi olsun diye:
+        note: noteVal,
+        datetimeISO: iso
+      };
 
-    // Save logic: call /api/pay, then store reminder
-    document.getElementById('saveBtn').addEventListener('click', async () => {
-      const note = document.getElementById('note').value.trim();
-      const date = document.getElementById('date').value; // yyyy-mm-dd
-      const time = document.getElementById('time').value; // hh:mm
-      if (!note || !date || !time) {
-        showMsg('Please fill reminder, date and time.', true);
-        return;
-      }
-
-      // For demo we use a fixed small USD amount (0.05) — you can add UI to change this.
-      const usdAmount = 0.05;
-
-      // Farcaster identity: try to obtain from SDK if available; otherwise fallback to dummy
-      let fid = null;
+      let resp;
       try {
-        if (window.sdk?.auth?.getCurrentUser) {
-          const user = await window.sdk.auth.getCurrentUser();
-          fid = user?.fid || null;
-        } else if (window.sdk?.actions?.getIdentity) {
-          const u = await window.sdk.actions.getIdentity();
-          fid = u?.fid || null;
-        }
-      } catch (e) {
-        // ignore; non-Farcaster env
-      }
-      if (!fid) fid = 0; // app-level placeholder
-
-      // The pay endpoint expects ethAddress: the recipient of the payment (user's wallet)
-      // For user-payments you would use user's wallet address; here we use the user's input address
-      // but since our UI doesn't ask for user's wallet (we prepare a draft), we'll set ethAddress placeholder
-      // If you want to use actual user wallet addresses, capture them from SDK or wallet connection.
-      const ethAddress = document.getElementById('ethAddress')?.value || '0x0000000000000000000000000000000000000000';
-
-      try {
-        const res = await fetch('/api/pay', {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ fid, usdAmount, ethAddress })
+        resp = await fetch("/api/pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
         });
-        const data = await res.json();
-        if (!data || !data.ok) {
-          console.error('pay error', data);
-          showMsg(data?.error || 'Something went wrong while creating payment draft.', true);
-          return;
-        }
-
-        // Save locally with draft
-        const saved = JSON.parse(localStorage.getItem('reminders_v1') || '[]');
-        const entry = {
-          note,
-          date,
-          time,
-          usdAmount,
-          txDraft: data.unsignedTx || null,
-          savedAt: new Date().toLocaleString()
-        };
-        saved.push(entry);
-        localStorage.setItem('reminders_v1', JSON.stringify(saved));
-        showMsg('Saved reminder and prepared payment draft (not sent).', false);
-        loadSaved();
-        // optional: clear inputs
-        document.getElementById('note').value = '';
-        // keep date/time for convenience
       } catch (err) {
-        console.error('save error', err);
-        showMsg('Network/server error while preparing payment draft.', true);
+        showError("Network error calling /api/pay.");
+        return;
       }
-    });
 
-    // init
-    loadSaved();
+      if (!resp.ok) {
+        showError("Server error from /api/pay.");
+        return;
+      }
+
+      let data;
+      try {
+        data = await resp.json();
+      } catch (err) {
+        showError("Could not parse server response.");
+        return;
+      }
+
+      // backend (pay.js) bize ne döndürüyor?
+      // Orijinal pay.js taslağına göre beklenen örnek:
+      // {
+      //   ok: true,
+      //   fid: 1234,
+      //   usdAmount: 0.05,
+      //   ethNeeded: "0.00001667",
+      //   unsignedTx: {
+      //      to: "...",
+      //      valueEth: "...",
+      //      data: "0x"
+      //   },
+      //   note: "This is only a draft tx..."
+      // }
+      if (!data || data.ok !== true) {
+        const errText = data && data.error ? data.error : "Payment draft failed.";
+        showError(errText);
+        return;
+      }
+
+      // Başarılıysa listeye ekle
+      // 1) okunabilir tarih/saat string
+      const whenPretty = iso.replace("T", " ").slice(0,16); // "2025-10-04 19:05"
+      // 2) payment draft text
+      const draftPretty = `Payment draft: ${data.ethNeeded || "?"} ETH (~$${FIXED_USD.toFixed(2)})`;
+
+      appendReminderToList({
+        note: noteVal,
+        whenText: whenPretty,
+        draftText: draftPretty
+      });
+
+      // inputları temizle
+      noteEl.value = "";
+      // date/time'ı temizlersen kullanıcı tekrar seçmek zorunda kalır, istersen temizle:
+      // dateEl.value = "";
+      // timeEl.value = "";
+    }
+
+    saveBtn.addEventListener("click", handleSave);
   </script>
 </body>
 </html>
+
 
