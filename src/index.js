@@ -119,10 +119,6 @@ app.get('/casts/:fid', (req, res) => {
   return res.json({ ok: true, casts });
 });
 
-app.get('/', (_req, res) => {
-  res.json({ ok: true, service: 'alerts-prototype', endpoints: ['/alerts', '/alerts/:id', '/casts/:fid', '/pay'] });
-});
-
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
 });
