@@ -14,8 +14,6 @@ module.exports = function handler(req, res) {
     res.status(200).send(html);
   } catch (err) {
     console.error("index.html okunamadı:", err);
-    res
-      .status(500)
-      .send("Beklenmeyen bir hata oldu (index.html bulunamadı).");
+    res.status(500).send("Beklenmeyen bir hata oldu (index.html bulunamadı).");
   }
 };
