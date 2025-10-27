@@ -1,7 +1,7 @@
 {
   "id": "farcaster-reminder-app",
   "name": "Reminder",
-  "description": "Save reminders with date/time. Preparing a small payment draft on save.",
+  "description": "Save reminders with a date and time. The app prepares a small ETH payment when you save a note.",
   "icon": "https://farcaster-reminder-app.vercel.app/icon.png",
   "developer": {
     "name": "mataramasuko95",
@@ -16,22 +16,22 @@
     {
       "type": "post",
       "name": "Save Reminder",
-      "description": "Store a reminder and prepare the ETH payment draft (~$0.05).",
+      "description": "Save a reminder note and time, and prepare a small ETH payment.",
       "endpoint": "pay",
       "input": {
         "type": "object",
         "properties": {
           "fid": {
             "type": "number",
-            "description": "User Farcaster FID"
+            "description": "Farcaster FID"
           },
           "usdAmount": {
             "type": "number",
-            "description": "USD amount (like 0.05)"
+            "description": "USD amount (≈ $0.05)"
           },
           "ethAddress": {
             "type": "string",
-            "description": "User wallet address"
+            "description": "Wallet address for payment"
           }
         },
         "required": ["fid", "usdAmount", "ethAddress"]
