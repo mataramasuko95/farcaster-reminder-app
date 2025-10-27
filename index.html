@@ -2,98 +2,154 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Farcaster Reminder Mini App</title>
+  <title>Yeni Not</title>
 
   <style>
+    /* sayfa genel */
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #fafafa;
-      color: #111;
+      background-color: #fdfbef; /* notlar uygulaması gibi hafif krem */
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+      color: #1a1a1a;
       margin: 0;
-      padding: 40px 16px 80px;
-      text-align: center;
+      padding: 0;
+      display: flex;
+      justify-content: center;
     }
 
-    h1 {
-      font-size: 1.8rem;
+    .page {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 16px 80px;
+    }
+
+    /* üst başlık */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: 1rem;
       font-weight: 600;
-      margin: 0 0 8px;
-      color: #111;
+      color: #3a3a3a;
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
-      font-size: 0.95rem;
-      color: #555;
-      margin-bottom: 32px;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #8a8a8a;
+      margin-top: 4px;
+      line-height: 1.2rem;
     }
 
-    button {
-      background-color: #111;
-      color: #fff;
-      font-size: 0.95rem;
+    /* not alanı kartı */
+    .note-card {
+      background-color: #fffef6;
+      border: 1px solid #e6e2c8;
+      box-shadow:
+        0 24px 40px -16px rgba(0,0,0,0.08),
+        0 2px 4px rgba(0,0,0,0.04);
+      border-radius: 12px;
+      padding: 16px 16px 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .note-label {
+      font-size: 0.75rem;
+      color: #7a7657;
       font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      resize: none;
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      line-height: 1.4rem;
+      color: #1a1a1a;
+      outline: none;
+    }
+
+    textarea::placeholder {
+      color: #b0a88a;
+    }
+
+    /* buton alanı */
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .save-btn {
+      background-color: #1a1a1a;
+      color: #fff;
       border: 0;
-      border-radius: 6px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1rem;
+      font-weight: 500;
       padding: 12px 20px;
+      min-width: 120px;
       cursor: pointer;
+      box-shadow: 0 10px 20px -6px rgba(0,0,0,0.4);
       transition: background-color 0.12s ease;
     }
-    button:hover {
+
+    .save-btn:hover {
       background-color: #000;
     }
 
-    /* kart */
-    .card-wrapper {
-      max-width: 640px;
-      margin: 32px auto 0;
-      text-align: left;
-    }
-
-    .card {
-      background-color: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px 20px;
-      box-shadow: 0 12px 24px -8px rgba(0,0,0,0.08);
-      min-height: 120px;
-    }
-
-    .line {
-      font-size: 0.9rem;
-      line-height: 1.4rem;
-      color: #111;
-      margin: 4px 0;
-      word-break: break-word;
-    }
-
-    .muted {
-      color: #6b7280;
+    /* durum mesajı */
+    .status-wrapper {
+      margin-top: 16px;
+      min-height: 32px;
+      text-align: center;
       font-size: 0.8rem;
       line-height: 1.2rem;
-      margin-top: 12px;
+      color: #4a4a4a;
+      white-space: pre-line;
     }
 
-    /* teknik detaylar toggle */
+    .status-ok {
+      color: #2e7d32; /* hafif yeşilimsi */
+      font-weight: 500;
+    }
+
+    .status-err {
+      color: #b00020;
+      font-weight: 500;
+    }
+
+    /* debug teknik bilgi kutusu - kullanıcı normalde görmez ama biz istersek açarız */
     .debug-toggle {
-      color: #6b7280;
-      font-size: 0.8rem;
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #90885d;
       text-decoration: underline;
       cursor: pointer;
-      display: inline-block;
-      margin-top: 16px;
     }
 
     pre {
-      background: #111;
-      color: #0f0;
-      font-size: 0.8rem;
-      line-height: 1.2rem;
-      padding: 16px;
-      border-radius: 6px;
+      margin-top: 8px;
+      background: #1e1e1e;
+      color: #c6f68d;
+      font-size: 0.7rem;
+      line-height: 1rem;
+      padding: 12px;
+      border-radius: 8px;
       overflow-x: auto;
-      white-space: pre-wrap;
       word-break: break-word;
-      margin-top: 12px;
+      white-space: pre-wrap;
     }
 
     #debugBox {
@@ -101,39 +157,60 @@
     }
   </style>
 
-  <!-- Farcaster js SDK (şimdilik dursun, ileride actions / signer entegrasyonu için kullanacağız) -->
+  <!-- ileride Farcaster actions / signer için kullanacağız -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 </head>
 
 <body>
-  <h1>🔔 Farcaster Reminder Mini App</h1>
-  <div class="subtitle">
-    Bu mini app, bir ödeme planı taslağı oluşturur (henüz zincire göndermez).
-  </div>
-
-  <button onclick="handleTestClick()">Planı Test Et</button>
-
-  <div class="card-wrapper">
-    <div id="resultCard" class="card">
-      <div class="line muted">
-        Henüz bir taslak oluşturmadın. Yukarıdaki butona tıkla 👆
-      </div>
+  <div class="page">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="title">Yeni Not</div>
+      <div class="subtitle">Hatırlatmanı yaz, “Kaydet” de. Gerisini biz hallederiz.</div>
     </div>
 
+    <!-- NOTE CARD -->
+    <div class="note-card">
+      <div class="note-label">Not metni</div>
+      <textarea
+        id="noteInput"
+        placeholder="Örn: 'Yarın 10:00'da X kişisine ödeme hatırlat.'"
+      ></textarea>
+    </div>
+
+    <!-- SAVE BUTTON -->
+    <div class="actions">
+      <button class="save-btn" onclick="handleSave()">Kaydet</button>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-wrapper" id="statusBox">
+      <!-- buraya 'Kaydedildi ✅' vs yazacağız -->
+    </div>
+
+    <!-- DEV/DEBUG -->
     <div class="debug-toggle" onclick="toggleDebug()">
       Teknik detayları göster / gizle
     </div>
-
     <pre id="debugBox">{}</pre>
   </div>
 
   <script>
-    async function handleTestClick() {
-      // örnek payload. sonra burayı gerçek inputlarla (fid, tutar vs) dolduracağız.
+    async function handleSave() {
+      const noteText = document.getElementById("noteInput").value.trim();
+      const statusBox = document.getElementById("statusBox");
+
+      if (!noteText) {
+        statusBox.innerHTML = `<span class="status-err">Boş notu kaydedemem 🙃</span>`;
+        return;
+      }
+
+      // Bu request backend'e not'u gönderiyor.
+      // İleride backend bu not için zincire gidecek tx planını üretir.
+      // Şimdilik sahte FID vb. göndermeye devam ediyoruz, ama amount/eth'i UI'da göstermiyoruz.
       const body = {
-        fid: 1234,
-        usdAmount: 0.05,
-        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12",
+        fid: 1234, // ileride gerçek kullanıcıya göre
+        note: noteText
       };
 
       try {
@@ -144,69 +221,40 @@
         });
 
         const data = await res.json();
-        renderResultCard(data);
+        console.log("Sunucu cevabı:", data);
+
+        // başarılı mı?
+        if (data && data.ok) {
+          statusBox.innerHTML = `<span class="status-ok">Kaydedildi ✅</span>`;
+        } else {
+          statusBox.innerHTML = `<span class="status-err">Kaydedilemedi ❌</span>`;
+        }
+
+        // geliştirici olarak yine elimizde olsun diye debug'a basıyoruz
         renderDebug(data);
+
+        // textarea'yı temizleyelim (not girildi sayalım)
+        document.getElementById("noteInput").value = "";
+
       } catch (err) {
-        console.error("İstek hata verdi:", err);
-        renderError(err);
+        console.error("Hata:", err);
+        statusBox.innerHTML = `<span class="status-err">Bir şeyler ters gitti ❌</span>`;
+        renderDebug(err);
       }
     }
 
-    function renderResultCard(data) {
-      // data beklenen shape:
-      // {
-      //   ok: true,
-      //   fid: 1234,
-      //   usdAmount: 0.05,
-      //   ethNeeded: ...,
-      //   unsignedTx: { to, valueEth, data },
-      //   note: "... açıklama ..."
-      // }
-
-      const el = document.getElementById("resultCard");
-
-      if (!data || data.ok !== true) {
-        el.innerHTML = `
-          <div class="line"><strong>Bir şeyler ters gitti.</strong></div>
-          <div class="line">Sunucudan geçerli bir plan dönmedi.</div>
-        `;
-        return;
-      }
-
-      const shortAddr = data?.unsignedTx?.to
-        ? data.unsignedTx.to.slice(0, 6) + "…" + data.unsignedTx.to.slice(-4)
-        : "(adres yok)";
-
-      el.innerHTML = `
-        <div class="line"><strong>FID:</strong> ${data.fid}</div>
-        <div class="line"><strong>Tutar (USD):</strong> $${data.usdAmount}</div>
-        <div class="line"><strong>Tahmini ETH:</strong> ~${data.ethNeeded} ETH</div>
-        <div class="line"><strong>Hedef adres:</strong> ${shortAddr}</div>
-        <div class="muted">${data.note || ""}</div>
-      `;
-    }
-
-    function renderDebug(data) {
+    function renderDebug(dataOrErr) {
       const box = document.getElementById("debugBox");
-      box.textContent = JSON.stringify(data, null, 2);
-    }
-
-    function renderError(err) {
-      const el = document.getElementById("resultCard");
-      el.innerHTML = `
-        <div class="line"><strong>Hata!</strong></div>
-        <div class="line">${err?.message || err}</div>
-      `;
-      const box = document.getElementById("debugBox");
-      box.textContent = String(err);
+      box.textContent = JSON.stringify(dataOrErr, null, 2);
     }
 
     function toggleDebug() {
       const box = document.getElementById("debugBox");
-      box.style.display = (box.style.display === "none" || box.style.display === "") 
-        ? "block" 
+      box.style.display = (box.style.display === "none" || box.style.display === "")
+        ? "block"
         : "none";
     }
   </script>
 </body>
 </html>
+
