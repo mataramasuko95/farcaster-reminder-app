@@ -1,520 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>Farcaster Reminder</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Farcaster Mini App SDK -->
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
   <style>
-    :root {
-      --bg-page: #fffdf6;
-      --card-bg: #ffffff;
-      --card-border: #ded5b0;
-      --text-main: #1a1a1a;
-      --text-dim: #5a5a5a;
-      --accent-bg: #000000;
-      --accent-text: #ffffff;
-      --error-bg: #fde4e4;
-      --error-text: #b00020;
-      --radius-lg: 8px;
-      --radius-md: 6px;
-      --radius-sm: 4px;
-      --shadow-card: 0 12px 32px rgba(0,0,0,0.08);
-      --shadow-btn: 0 4px 12px rgba(0,0,0,0.2);
+    :root{
+      --bg:#fbf5e8;
+      --card:#fff;
+      --muted:#a08f80;
+      --accent:#000;
+      --accent-2:#f6e7d0;
+    }
+    body{
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:40px 16px;
+    }
+    .wrap{
+      width:380px;
+      max-width:95%;
+      background:var(--card);
+      border-radius:12px;
+      box-shadow: 0 8px 20px rgba(20,20,20,0.08);
+      padding:28px;
+      box-sizing:border-box;
+    }
+    .icon{
+      font-size:34px;
+      width:50px;
+      height:50px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 6px;
+      background: linear-gradient(#fff,#fff);
+    }
+    h1{
+      text-align:center;
+      margin:0 0 14px;
+      font-size:22px;
+    }
+    p.lead{
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      margin:0 0 18px;
     }
 
-    body {
-      background: radial-gradient(circle at 50% 0%, #fff9e8 0%, #fffdf6 40%, #ffffff 80%);
-      background-color: var(--bg-page);
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      padding: 24px;
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    textarea, input[type="date"], input[type="time"], input[type="text"]{
+      width:100%;
+      box-sizing:border-box;
+      padding:12px 14px;
+      border-radius:8px;
+      border:1px solid #efe6d8;
+      background:#fff;
+      font-size:14px;
+      color:#222;
+    }
+    .row{display:flex; gap:12px; margin-top:10px;}
+    .row .col{flex:1}
+
+    button.save{
+      display:block;
+      width:100%;
+      margin-top:18px;
+      background:#000;
+      color:#fff;
+      padding:14px;
+      border-radius:10px;
+      border:0;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
     }
 
-    .app-shell {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-card);
-      max-width: 480px;
-      width: 100%;
-      padding: 24px 24px 32px;
+    .msg{
+      margin-top:14px;
+      padding:12px;
+      border-radius:8px;
+      background:#ffecec;
+      color:#8a1f1f;
+      display:none;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
+    .savedBox{
+      margin-top:18px;
+      padding:14px;
+      border-radius:10px;
+      background:var(--accent-2);
+      border:1px solid #f0e5d8;
     }
-
-    .bell-icon {
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--text-main);
-      line-height: 1.2;
-      margin: 0;
-    }
-
-    .form-row {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 16px;
-    }
-
-    .row-inline {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .row-inline .field {
-      flex: 1 1 0px;
-      min-width: 0;
-    }
-
-    label {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-main);
-      line-height: 1.4;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    label small {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--text-dim);
-    }
-
-    textarea,
-    input[type="text"],
-    input[type="date"],
-    input[type="time"] {
-      width: 100%;
+    .remItem{
       background: #fff;
-      border: 1px solid #c9c2a2;
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      font-size: 15px;
-      line-height: 1.4;
-      color: var(--text-main);
-      box-sizing: border-box;
-      font-family: inherit;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #efe6d8;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
     }
-
-    textarea:focus,
-    input:focus {
-      outline: 2px solid #000;
-      outline-offset: -1px;
-      background: #fffdfc;
-    }
-
-    textarea {
-      min-height: 70px;
-      resize: none;
-    }
-
-    .save-wrapper {
-      text-align: center;
-      margin: 8px 0 20px 0;
-    }
-
-    button.save-btn {
-      width: 100%;
-      background: var(--accent-bg);
-      color: var(--accent-text);
-      border: 0;
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: var(--shadow-btn);
-      font-family: inherit;
-    }
-
-    button.save-btn:active {
-      transform: translateY(1px);
-    }
-
-    .error-box {
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      background: var(--error-bg);
-      color: var(--error-text);
-      font-size: 14px;
-      line-height: 1.4;
-      margin-bottom: 20px;
-      display: none; /* shown dynamically */
-    }
-
-    /* Saved Reminders card */
-    .saved-card {
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-md);
-      background: #fffef9;
-      padding: 16px;
-    }
-
-    .saved-card h2 {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-main);
-      margin: 0 0 12px 0;
-    }
-
-    .reminder-item {
-      border-radius: var(--radius-sm);
-      border: 1px solid #e1dbc0;
-      background: #ffffff;
-      padding: 12px 14px;
-      font-size: 14px;
-      line-height: 1.4;
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .rem-top-row {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      word-break: break-word;
-      font-size: 14px;
-    }
-
-    .rem-note {
-      font-weight: 500;
-      color: var(--text-main);
-      overflow-wrap: anywhere;
-      max-width: 60%;
-    }
-
-    .rem-datetime {
-      color: var(--text-dim);
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    .rem-draft {
-      font-size: 13px;
-      color: var(--text-dim);
-    }
-
-    @media (max-width: 480px) {
-      .app-shell {
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
-        max-width: 100%;
-        min-height: 100vh;
-      }
-    }
+    .muted{color:var(--muted); font-size:13px}
+    .txLine{font-size:13px; color:#444; margin-top:6px}
   </style>
 </head>
 <body>
+  <div class="wrap" role="main">
+    <div class="icon">🔔</div>
+    <h1>Farcaster Reminder</h1>
+    <p class="lead">Write a reminder and pick a date/time. Save will prepare a payment draft.</p>
 
-  <div class="app-shell">
-    <div class="header">
-      <div class="bell-icon">🔔</div>
-      <h1>Farcaster Reminder</h1>
+    <div>
+      <label for="note">Reminder Note <span class="muted">ex. "Team call at 12:00"</span></label>
+      <textarea id="note" rows="4" placeholder="Write your reminder..."></textarea>
     </div>
 
-    <!-- Error box -->
-    <div id="errorBox" class="error-box"></div>
-
-    <!-- Form -->
-    <div class="form-row">
-      <label for="noteInput">
-        Reminder Note
-        <small>ex. "Team call at 12:00"</small>
-      </label>
-      <textarea id="noteInput" placeholder="Write your reminder..."></textarea>
-    </div>
-
-    <div class="row-inline">
-      <div class="field form-row">
-        <label for="dateInput">
-          Date
-          <small>(dd.mm.yyyy)</small>
-        </label>
-        <input
-          id="dateInput"
-          type="date"
-          placeholder="gg.aa.yyyy"
-          style="text-transform: lowercase;"
-        />
+    <div class="row">
+      <div class="col">
+        <label for="date">Date <span class="muted">(dd.mm.yyyy)</span></label>
+        <input id="date" type="date"/>
       </div>
-
-      <div class="field form-row">
-        <label for="timeInput">
-          Time
-          <small>(hh:mm)</small>
-        </label>
-        <input
-          id="timeInput"
-          type="time"
-          placeholder="--:--"
-        />
+      <div class="col">
+        <label for="time">Time <span class="muted">(hh:mm)</span></label>
+        <input id="time" type="time"/>
       </div>
     </div>
 
-    <div class="save-wrapper">
-      <button id="saveBtn" class="save-btn">Save</button>
-    </div>
+    <button class="save" id="saveBtn">Save</button>
 
-    <!-- Saved Reminders -->
-    <div class="saved-card">
-      <h2>Saved Reminders</h2>
-      <div id="remindersList"></div>
+    <div class="msg" id="msgBox"></div>
+
+    <div class="savedBox">
+      <div style="font-weight:700; margin-bottom:8px">Saved Reminders</div>
+      <div id="savedList"></div>
     </div>
   </div>
 
   <script>
-    // Local state of reminders (in-memory for now)
-    const reminders = [];
-
-    // util: format a Date into "YYYY-MM-DDTHH:mm:ssZ" (ISO-ish with UTC)
-    function buildISO(dateStr, timeStr) {
-      // dateStr => "2025-10-09"
-      // timeStr => "18:44"
-      if (!dateStr || !timeStr) return null;
-
-      // create local date
-      const [yyyy, mm, dd] = dateStr.split("-");
-      const [hh, min] = timeStr.split(":");
-
-      // build a Date in local time
-      const dt = new Date(
-        Number(yyyy),
-        Number(mm) - 1,
-        Number(dd),
-        Number(hh),
-        Number(min),
-        0,
-        0
-      );
-
-      // final => ISO UTC
-      return dt.toISOString();
-    }
-
-    // util: format a datetime string for display in list
-    function niceDateTime(iso) {
-      const d = new Date(iso);
-      // date Y-M-D H:M (24h)
-      // ex "2025-10-09 18:44"
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mm = String(d.getMinutes()).padStart(2, "0");
-      return `${y}-${m}-${day} ${hh}:${mm}`;
-    }
-
-    function showError(msg) {
-      const box = document.getElementById("errorBox");
-      box.innerText = msg;
-      box.style.display = "block";
-    }
-
-    function clearError() {
-      const box = document.getElementById("errorBox");
-      box.innerText = "";
-      box.style.display = "none";
-    }
-
-    function renderReminders() {
-      const listEl = document.getElementById("remindersList");
-      listEl.innerHTML = "";
-
-      reminders.forEach((r) => {
-        const item = document.createElement("div");
-        item.className = "reminder-item";
-
-        const top = document.createElement("div");
-        top.className = "rem-top-row";
-
-        const noteEl = document.createElement("div");
-        noteEl.className = "rem-note";
-        noteEl.textContent = r.note || "(no note)";
-
-        const whenEl = document.createElement("div");
-        whenEl.className = "rem-datetime";
-        whenEl.textContent = niceDateTime(r.remindAtISO);
-
-        top.appendChild(noteEl);
-        top.appendChild(whenEl);
-
-        const draftEl = document.createElement("div");
-        draftEl.className = "rem-draft";
-        draftEl.textContent = `Payment draft: ${r.ethNeededDisplay}`;
-
-        item.appendChild(top);
-        item.appendChild(draftEl);
-
-        listEl.appendChild(item);
-      });
-    }
-
-    // Convert ETH string (e.g. "0.00001667") → hex wei string "0x..."
-    function ethToHexWei(ethStr) {
-      // multiply ETH by 1e18 to get wei
-      const weiBN = BigInt(Math.round(parseFloat(ethStr) * 1e18));
-      return "0x" + weiBN.toString(16);
-    }
-
-    // (PLACEHOLDER) Send tx via Farcaster wallet
-    // IMPORTANT: This is where we talk to the Farcaster Mini App Wallet.
-    // When we plug in the real SDK method, we do it here.
-    async function sendTransactionDraft(unsignedTx) {
-      // unsignedTx = { to, valueEth, data:"0x" }
-
-      const to = unsignedTx.to;
-      const valueHexWei = ethToHexWei(unsignedTx.valueEth); // convert to wei hex
-      const data = unsignedTx.data || "0x";
-
-      // TODO: CALL THE REAL FARCASTER WALLET ACTION HERE.
-      // Something along the lines of:
-      //
-      // await window.sdk.wallet.sendTransaction({
-      //   to,
-      //   value: valueHexWei,
-      //   data
-      // });
-      //
-      // Warpcast shows a confirm modal, user approves, tx is broadcast.
-      //
-      // For now we'll simulate success == true so UI can continue working.
-      console.log("Simulating wallet tx:", { to, valueHexWei, data });
-
-      // simulate user approval:
-      return true;
-    }
-
-    async function handleSave() {
-      clearError();
-
-      const note = document.getElementById("noteInput").value.trim();
-      const dateVal = document.getElementById("dateInput").value; // "2025-10-09"
-      const timeVal = document.getElementById("timeInput").value; // "18:44"
-
-      if (!note) {
-        showError("Please enter a reminder note.");
-        return;
-      }
-      if (!dateVal || !timeVal) {
-        showError("Please select date and time.");
-        return;
-      }
-
-      // 1) ISO string for when the reminder should trigger
-      const remindAtISO = buildISO(dateVal, timeVal);
-      if (!remindAtISO) {
-        showError("Invalid date/time.");
-        return;
-      }
-
-      // 2) create payment draft by calling /api/pay
-      let payDraft;
-      try {
-        const body = {
-          fid: 1234,                 // could be actual Farcaster FID later
-          note: note,
-          usdAmount: 0.05,           // fixed "price" per reminder
-          remindAtISO: remindAtISO,
-        };
-
-        const resp = await fetch("/api/pay", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        });
-
-        payDraft = await resp.json();
-        console.log("payDraft from /api/pay:", payDraft);
-
-        if (!payDraft.ok) {
-          throw new Error(payDraft.error || "Payment draft failed");
-        }
-      } catch (err) {
-        console.error(err);
-        showError("Something went wrong while creating payment draft.");
-        return;
-      }
-
-      // 3) ask wallet to actually send the ETH
-      try {
-        const didSend = await sendTransactionDraft({
-          to: payDraft.unsignedTx.to,
-          valueEth: payDraft.unsignedTx.valueEth,
-          data: payDraft.unsignedTx.data,
-        });
-
-        if (!didSend) {
-          // user canceled or wallet failed
-          showError("Payment was not completed.");
-          return;
-        }
-      } catch (err) {
-        console.error("Wallet tx error:", err);
-        showError("Payment failed or was rejected.");
-        return;
-      }
-
-      // 4) If we get here, payment succeeded.
-      // Store the reminder locally (for now).
-      const ethFloat = Number(payDraft.ethNeeded);
-      const prettyEth = ethFloat.toFixed(8);
-      const approxUsd = "$0.05";
-
-      reminders.unshift({
-        note,
-        remindAtISO,
-        ethNeededDisplay: `${prettyEth} ETH (~${approxUsd})`,
-      });
-
-      // Clear inputs
-      document.getElementById("noteInput").value = "";
-      document.getElementById("dateInput").value = "";
-      document.getElementById("timeInput").value = "";
-
-      renderReminders();
-    }
-
-    // Hook up button
-    document.getElementById("saveBtn").addEventListener("click", handleSave);
-
-    // Tell Farcaster we're ready (prevents “ready not called” splash)
+    // Call Farcaster SDK ready if present
     window.onload = () => {
-      if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
-        try {
+      try {
+        if (window.sdk?.actions?.ready) {
           window.sdk.actions.ready();
-        } catch (err) {
-          console.warn("sdk.actions.ready() failed (safe to ignore in browser preview):", err);
         }
+      } catch (e) {
+        // ignore
       }
     };
 
-    // Initial render of empty list
-    renderReminders();
+    // Helpers
+    function showMsg(text, isError = true) {
+      const box = document.getElementById('msgBox');
+      box.style.display = 'block';
+      box.style.background = isError ? '#ffecec' : '#e6ffe9';
+      box.style.color = isError ? '#8a1f1f' : '#1f6f2f';
+      box.innerText = text;
+      setTimeout(()=> { box.style.display = 'none'; }, 7000);
+    }
+
+    function formatDateForDisplay(dateStr, timeStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T' + (timeStr || '00:00'));
+      // dd.mm.yyyy hh:mm
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const min = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+    }
+
+    function loadSaved() {
+      const raw = localStorage.getItem('reminders_v1') || '[]';
+      const arr = JSON.parse(raw);
+      const target = document.getElementById('savedList');
+      target.innerHTML = '';
+      if (!arr.length) {
+        target.innerHTML = '<div class="muted">No saved reminders yet.</div>';
+        return;
+      }
+      arr.slice().reverse().forEach(r => {
+        const el = document.createElement('div');
+        el.className = 'remItem';
+        el.innerHTML = '<div><div style="font-weight:600;">'+escapeHtml(r.note)+'</div>'
+          + '<div class="muted">'+formatDateForDisplay(r.date, r.time)+'</div>'
+          + (r.txDraft ? ('<div class="txLine">Payment draft: '+escapeHtml(r.txDraft.valueEth)+' ETH (~$'+(Number(r.usdAmount)||0)+')</div>') : '')
+          + '</div>'
+          + '<div style="text-align:right;color:#666;font-size:12px;">'+(r.savedAt||'')+'</div>';
+        target.appendChild(el);
+      });
+    }
+
+    function escapeHtml(s){
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // Save logic: call /api/pay, then store reminder
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const note = document.getElementById('note').value.trim();
+      const date = document.getElementById('date').value; // yyyy-mm-dd
+      const time = document.getElementById('time').value; // hh:mm
+      if (!note || !date || !time) {
+        showMsg('Please fill reminder, date and time.', true);
+        return;
+      }
+
+      // For demo we use a fixed small USD amount (0.05) — you can add UI to change this.
+      const usdAmount = 0.05;
+
+      // Farcaster identity: try to obtain from SDK if available; otherwise fallback to dummy
+      let fid = null;
+      try {
+        if (window.sdk?.auth?.getCurrentUser) {
+          const user = await window.sdk.auth.getCurrentUser();
+          fid = user?.fid || null;
+        } else if (window.sdk?.actions?.getIdentity) {
+          const u = await window.sdk.actions.getIdentity();
+          fid = u?.fid || null;
+        }
+      } catch (e) {
+        // ignore; non-Farcaster env
+      }
+      if (!fid) fid = 0; // app-level placeholder
+
+      // The pay endpoint expects ethAddress: the recipient of the payment (user's wallet)
+      // For user-payments you would use user's wallet address; here we use the user's input address
+      // but since our UI doesn't ask for user's wallet (we prepare a draft), we'll set ethAddress placeholder
+      // If you want to use actual user wallet addresses, capture them from SDK or wallet connection.
+      const ethAddress = document.getElementById('ethAddress')?.value || '0x0000000000000000000000000000000000000000';
+
+      try {
+        const res = await fetch('/api/pay', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ fid, usdAmount, ethAddress })
+        });
+        const data = await res.json();
+        if (!data || !data.ok) {
+          console.error('pay error', data);
+          showMsg(data?.error || 'Something went wrong while creating payment draft.', true);
+          return;
+        }
+
+        // Save locally with draft
+        const saved = JSON.parse(localStorage.getItem('reminders_v1') || '[]');
+        const entry = {
+          note,
+          date,
+          time,
+          usdAmount,
+          txDraft: data.unsignedTx || null,
+          savedAt: new Date().toLocaleString()
+        };
+        saved.push(entry);
+        localStorage.setItem('reminders_v1', JSON.stringify(saved));
+        showMsg('Saved reminder and prepared payment draft (not sent).', false);
+        loadSaved();
+        // optional: clear inputs
+        document.getElementById('note').value = '';
+        // keep date/time for convenience
+      } catch (err) {
+        console.error('save error', err);
+        showMsg('Network/server error while preparing payment draft.', true);
+      }
+    });
+
+    // init
+    loadSaved();
   </script>
 </body>
 </html>
+
