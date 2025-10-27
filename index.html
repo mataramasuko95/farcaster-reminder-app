@@ -1,277 +1,317 @@
 <!DOCTYPE html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Farcaster Reminder Mini App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <head>
+    <meta charset="UTF-8" />
+    <title>Farcaster Reminder Mini App</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
-      background-color: #fafafa;
-      color: #111;
-      margin: 0;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    <!-- Farcaster SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
-    .card {
-      max-width: 480px;
-      width: 100%;
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      padding: 20px 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.04);
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .header-icon {
-      font-size: 32px;
-    }
-
-    .title {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 8px 0 4px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: #555;
-      line-height: 1.4;
-    }
-
-    .field-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #444;
-      margin: 16px 0 6px;
-      display: block;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 80px;
-      resize: none;
-      border: 1px solid #dcdcdc;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 15px;
-      line-height: 1.4;
-      font-family: inherit;
-      background-color: #fff;
-      box-sizing: border-box;
-      outline: none;
-    }
-    textarea:focus {
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
-    }
-
-    input[type="datetime-local"] {
-      width: 100%;
-      border: 1px solid #dcdcdc;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 15px;
-      background-color: #fff;
-      outline: none;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-    input[type="datetime-local"]:focus {
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
-    }
-
-    .save-row {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    button {
-      appearance: none;
-      border: 0;
-      border-radius: 10px;
-      background: #111;
-      color: #fff;
-      font-size: 15px;
-      line-height: 1.2;
-      font-weight: 500;
-      padding: 12px 16px;
-      cursor: pointer;
-      min-width: 120px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-    button:active {
-      transform: scale(.98);
-    }
-
-    .output-wrapper {
-      max-width: 480px;
-      width: 100%;
-      background: #f5f5f5;
-      border: 1px solid #e1e1e1;
-      border-radius: 8px;
-      padding: 16px;
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.4;
-      color: #222;
-      margin-top: 24px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .status-ok {
-      color: #2e7d32;
-      font-weight: 500;
-      margin-top: 12px;
-      text-align: center;
-    }
-
-    .status-err {
-      color: #b00020;
-      font-weight: 500;
-      margin-top: 12px;
-      text-align: center;
-    }
-  </style>
-
-  <!-- Farcaster miniapp sdk (cüzdan çağrısı için) -->
-  <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
-
-  <script>
-    async function handleSave() {
-      const noteText = document.getElementById("noteInput").value.trim();
-      const remindLocal = document.getElementById("timeInput").value.trim();
-      const outputBox = document.getElementById("output");
-      const statusBox = document.getElementById("statusBox");
-
-      // basic validation
-      if (!noteText) {
-        statusBox.innerHTML = '<div class="status-err">Not boş olamaz 🙃</div>';
-        return;
-      }
-      if (!remindLocal) {
-        statusBox.innerHTML = '<div class="status-err">Zaman seçmelisin ⏰</div>';
-        return;
+    <style>
+      :root {
+        --bg: #fdfdfd;
+        --card: #ffffff;
+        --border: #ddd;
+        --text-main: #111;
+        --text-dim: #666;
+        --accent: #000;
+        --radius-lg: 16px;
+        --radius-md: 10px;
+        --radius-sm: 6px;
+        --font: -apple-system,BlinkMacSystemFont,"Inter","SF Pro Text","Roboto","Segoe UI",system-ui,sans-serif;
       }
 
-      // datetime-local formatı genelde "2025-10-28T10:30"
-      // Biz bunu "2025-10-28T10:30:00Z" haline getiriyoruz.
-      const remindAtIso = remindLocal + ":00Z";
+      body {
+        background-color: var(--bg);
+        color: var(--text-main);
+        font-family: var(--font);
+        margin: 0;
+        padding: 24px 16px 80px;
+        display: flex;
+        justify-content: center;
+      }
 
-      // Şu an sabit değerler:
-      // - fid: 1234 (ileride gerçek kullanıcı FID'i)
-      // - usdAmount: 0.05 (sabitledik)
-      // - ethAddress: ödeme gitsin istediğin cüzdan adresi
-      const body = {
-        fid: 1234,
-        usdAmount: 0.05,
-        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12",
-        noteText: noteText,
-        remindAtIso: remindAtIso
-      };
+      .app-shell {
+        width: 100%;
+        max-width: 480px;
+      }
 
-      try {
-        // 1) backend'e isteği gönder
-        const res = await fetch("/api/pay", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+      .header-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 16px;
+        text-align: center;
+        box-shadow: 0 12px 28px rgba(0,0,0,0.04);
+      }
 
-        const data = await res.json();
+      .emoji-badge {
+        font-size: 28px;
+        line-height: 1;
+        display: inline-block;
+        margin-bottom: 8px;
+      }
 
-        // debug output
-        outputBox.textContent = JSON.stringify(data, null, 2);
+      .title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0 0 6px;
+      }
 
-        if (!data.ok) {
-          statusBox.innerHTML = '<div class="status-err">Kaydedilemedi ❌</div>';
+      .subtitle {
+        font-size: 14px;
+        line-height: 1.4;
+        color: var(--text-dim);
+        margin: 0;
+      }
+
+      .note-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.04);
+        margin-top: 16px;
+        padding: 16px;
+      }
+
+      .field-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .field-hint {
+        font-size: 12px;
+        color: var(--text-dim);
+        font-weight: 400;
+      }
+
+      textarea.note-input {
+        width: 100%;
+        background: #fafafa;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        min-height: 80px;
+        font-family: inherit;
+        font-size: 14px;
+        color: var(--text-main);
+        resize: none;
+        outline: none;
+      }
+
+      textarea.note-input:focus {
+        border-color: var(--accent);
+        background: #fff;
+      }
+
+      .time-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .time-field {
+        flex: 1;
+      }
+
+      input.time-input,
+      input.date-input {
+        width: 100%;
+        box-sizing: border-box;
+        background: #fafafa;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 10px 12px;
+        font-size: 14px;
+        color: var(--text-main);
+        outline: none;
+      }
+
+      input.time-input:focus,
+      input.date-input:focus {
+        border-color: var(--accent);
+        background: #fff;
+      }
+
+      .save-btn-wrap {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      button.save-btn {
+        -webkit-appearance: none;
+        appearance: none;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.2;
+        padding: 12px 16px;
+        min-width: 140px;
+        cursor: pointer;
+      }
+
+      button.save-btn:active {
+        opacity: 0.85;
+        transform: scale(.99);
+      }
+
+      .result-card {
+        background: #fafafa;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-top: 20px;
+        padding: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--text-main);
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .footer-hint {
+        margin-top: 16px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dim);
+        text-align: center;
+      }
+    </style>
+
+    <script>
+      async function sendPayRequest() {
+        const noteText = document.getElementById("noteInput").value.trim();
+        const dateVal  = document.getElementById("dateInput").value;
+        const timeVal  = document.getElementById("timeInput").value;
+
+        // frontend tarafında basic validation
+        if (!noteText) {
+          showResult({ ok: false, error: "Lütfen hatırlatma metni gir." });
+          return;
+        }
+        if (!dateVal || !timeVal) {
+          showResult({ ok: false, error: "Lütfen tarih ve saat seç." });
           return;
         }
 
-        // 2) buraya geldiysek backend bize bir tx verdi
-        statusBox.innerHTML = '<div class="status-ok">Kaydedildi ✅ İşlem hazırlanıyor…</div>';
+        // ==== ÖDEME / TX TASLAĞI ====
+        // Bu endpoint (api/pay.js) hâlâ aynı şekilde sahte tx taslağı veriyor.
+        try {
+          const body = {
+            fid: 1234,
+            usdAmount: 0.05,
+            ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12"
+          };
 
-        // 3) farcaster cüzdanına gönder
-        // Not: Normal tarayıcıda window.farcaster yok. Miniapp içinde olacak.
-        // O yüzden burada guard koyuyoruz.
-        if (
-          window.farcaster &&
-          window.farcaster.wallet &&
-          typeof window.farcaster.wallet.sendTransaction === "function"
-        ) {
-          try {
-            const txReceipt = await window.farcaster.wallet.sendTransaction({
-              chainId: data.tx.chainId,
-              to: data.tx.to,
-              value: data.tx.value,
-              data: data.tx.data,
-            });
+          const res = await fetch("/api/pay", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
 
-            console.log("txReceipt", txReceipt);
-            statusBox.innerHTML = '<div class="status-ok">Kaydedildi ve gönderildi 🎉</div>';
-          } catch (sendErr) {
-            console.error("Kullanıcı iptal etti veya hata:", sendErr);
-            statusBox.innerHTML = '<div class="status-err">İşlem iptal edildi / başarısız 💔</div>';
-          }
-        } else {
-          console.warn("Farcaster wallet API bu ortamda yok (normal tarayıcı).");
-          statusBox.innerHTML = '<div class="status-ok">Kaydedildi ✅ (Test ortamı, cüzdan yok)</div>';
+          const data = await res.json();
+
+          // burada not+zaman bilgisini da gösterelim
+          data.noteText = noteText;
+          data.remindAt = `${dateVal} ${timeVal}`;
+
+          showResult(data);
+        } catch (err) {
+          showResult({ ok: false, error: "İstek başarısız: " + err.message });
         }
-
-        // alanları temizle
-        document.getElementById("noteInput").value = "";
-        document.getElementById("timeInput").value = "";
-
-      } catch (err) {
-        console.error("fetch/pay error:", err);
-        statusBox.innerHTML = '<div class="status-err">Bir şeyler ters gitti ❌</div>';
       }
-    }
-  </script>
-</head>
 
-<body>
-  <div class="card">
-    <div class="header">
-      <div class="header-icon">🔔</div>
-      <div class="title">Farcaster Reminder Mini App</div>
-      <div class="subtitle">
-        Hatırlatma notunu yaz. Saatini seç. Kaydet’e basınca ödeme tx’i tetiklenir.
-        (Ücret kullanıcıya gösterilmez.)
+      function showResult(data) {
+        const box = document.getElementById("resultBox");
+        box.textContent = JSON.stringify(data, null, 2);
+      }
+
+      // -------- Farcaster Mini App Ready --------
+      window.onload = () => {
+        // Farcaster Preview Tool "Ready not called" uyarısını susturmak için:
+        if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === "function") {
+          window.sdk.actions.ready();
+        }
+      };
+    </script>
+  </head>
+
+  <body>
+    <div class="app-shell">
+      <!-- Üst kart / başlık -->
+      <section class="header-card">
+        <div class="emoji-badge">🔔</div>
+        <h1 class="title">Farcaster Reminder Mini App</h1>
+        <p class="subtitle">
+          Bu mini app sana bir hatırlatma notu ve zamanı kaydetmek için tasarlandı.
+          Kaydet dediğinde zincire gönderilecek ödeme taslağını da hazırlarız.
+        </p>
+      </section>
+
+      <!-- Not alanı -->
+      <section class="note-card">
+
+        <div class="field-label">
+          <span>Hatırlatma Notu</span>
+          <span class="field-hint">örn. “12:00 toplantıyı unutma”</span>
+        </div>
+        <textarea
+          id="noteInput"
+          class="note-input"
+          placeholder="Ne için ping almak istiyorsun?"
+        ></textarea>
+
+        <div class="time-row">
+          <div class="time-field">
+            <div class="field-label">
+              <span>Tarih</span>
+            </div>
+            <input
+              id="dateInput"
+              class="date-input"
+              type="date"
+            />
+          </div>
+
+          <div class="time-field">
+            <div class="field-label">
+              <span>Saat</span>
+            </div>
+            <input
+              id="timeInput"
+              class="time-input"
+              type="time"
+            />
+          </div>
+        </div>
+
+        <div class="save-btn-wrap">
+          <button class="save-btn" onclick="sendPayRequest()">
+            Kaydet
+          </button>
+        </div>
+      </section>
+
+      <!-- Sonuç / debug -->
+      <section class="result-card" id="resultBox">
+        {"ok":true,"message":"Henüz bir istek göndermedin."}
+      </section>
+
+      <div class="footer-hint">
+        Bu ekran sadece demo. “Kaydet” dediğinde backend’den
+        sahte bir tx taslağı döndürüyoruz.<br/>
+        Gerçek ödeme zincire gönderilmez.
       </div>
     </div>
-
-    <label class="field-label" for="noteInput">Hatırlatma Notu</label>
-    <textarea
-      id="noteInput"
-      placeholder="Örn: 'Yarın 14:30'da şu kişiye yazmayı unutma'"
-    ></textarea>
-
-    <label class="field-label" for="timeInput">Ne zaman hatırlatayım?</label>
-    <input id="timeInput" type="datetime-local" />
-
-    <div class="save-row">
-      <button onclick="handleSave()">Kaydet</button>
-    </div>
-  </div>
-
-  <div id="statusBox"></div>
-
-  <pre id="output" class="output-wrapper">
-Sonuç burada görünecek...
-  </pre>
-</body>
+  </body>
 </html>
-
 
