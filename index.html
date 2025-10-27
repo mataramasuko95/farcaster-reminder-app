@@ -1,363 +1,504 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+  />
   <title>Farcaster Reminder</title>
 
-  <!-- Farcaster Mini App SDK -->
+  <!-- Farcaster Mini Apps SDK (for ready() in Preview Tool) -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
   <style>
-    :root {
-      --bg-page: #fff8e6;
-      --card-bg: #ffffff;
-      --text-main: #000000;
-      --text-dim: #555;
-      --border: #ddd;
-      --accent-bg: #000;
-      --accent-text: #fff;
-      --radius-card: 12px;
-      --radius-field: 8px;
-      --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Global reset-ish */
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
       margin: 0;
-      background: var(--bg-page);
-      font-family: var(--font-stack);
-      color: var(--text-main);
-      min-height: 100vh;
+      background: #faf6e9; /* warm cream */
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #111;
       display: flex;
-      align-items: flex-start;
       justify-content: center;
-      padding: 16px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 16px 80px;
     }
 
     .card {
-      background: var(--card-bg);
-      border-radius: var(--radius-card);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 360px;
-      padding: 20px 20px 16px;
-      box-sizing: border-box;
+      background: #fffefb;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+      padding: 24px 20px 20px;
     }
 
-    .header-row {
+    /* Header */
+    .header {
       text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .bell {
-      font-size: 28px;
-      line-height: 1;
-      display: inline-block;
-      margin-bottom: 8px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    /* form alanı */
-    .field-block {
-      margin-bottom: 16px;
-    }
-
-    .label-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-      line-height: 1.3;
-    }
-
-    .label-row span.example {
-      font-style: italic;
-    }
-
-    .textarea-like,
-    .input-like {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-field);
-      font-size: 15px;
-      line-height: 1.4;
-      color: var(--text-main);
-      background: #fff;
-      box-sizing: border-box;
-      padding: 12px 12px;
-      font-family: inherit;
-      outline: none;
-    }
-
-    .textarea-like {
-      min-height: 56px;
-      resize: none;
-    }
-
-    .row-2col {
-      display: flex;
-      gap: 12px;
       margin-bottom: 20px;
     }
 
-    .col-half {
-      flex: 1;
+    .header-emoji {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 8px;
     }
 
-    .date-time-wrapper {
-      position: relative;
-    }
-
-    .date-time-input {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-field);
-      font-size: 15px;
-      padding: 12px 38px 12px 12px;
-      line-height: 1.4;
-      background-color: #fff;
-      color: var(--text-main);
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-
-    .date-time-icon {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px;
-      color: var(--text-dim);
-      pointer-events: none;
-    }
-
-    button.save-btn {
-      width: 100%;
-      background: var(--accent-bg);
-      color: var(--accent-text);
-      border: none;
-      border-radius: var(--radius-field);
-      font-size: 16px;
-      line-height: 1.2;
+    .header-title {
+      font-size: 20px;
       font-weight: 600;
-      padding: 14px 16px;
-      cursor: pointer;
-      font-family: inherit;
+      color: #000;
     }
 
-    button.save-btn:active {
-      opacity: 0.9;
+    /* Form labels / layout */
+    .section-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #111;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      line-height: 1.4;
     }
 
-    /* Kayıtlı hatırlatmalar listesi */
-    .list-wrapper {
+    .section-hint {
+      font-size: 12px;
+      color: #888;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+
+    .note-area {
+      width: 100%;
+      min-height: 72px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      font-size: 15px;
+      line-height: 1.4;
+      padding: 12px 14px;
+      resize: none;
+    }
+    .note-area:focus {
+      outline: 2px solid #000;
+      outline-offset: 0;
+      border-color: #000;
+    }
+
+    .row-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-top: 20px;
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
     }
 
-    .list-title {
+    .field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: calc(50% - 6px);
+    }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      color: #111;
+      font-weight: 500;
+      font-size: 13px;
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .field-hint {
+      color: #888;
+      font-weight: 400;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .text-input {
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.3;
+      background: #fff;
+      color: #000;
+    }
+    .text-input:focus {
+      outline: 2px solid #000;
+      outline-offset: 0;
+      border-color: #000;
+    }
+
+    /* Save button */
+    .save-wrap {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .save-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      background: #000;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 14px 20px;
+      min-width: 140px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+
+    .save-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Reminders list */
+    .reminder-list-wrap {
+      margin-top: 28px;
+      background: #fffefb;
+      border-radius: 12px;
+      padding: 16px 14px;
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .reminder-list-title {
       font-size: 14px;
       font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 8px;
+      color: #000;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .list-title .clock {
-      font-size: 14px;
+    .reminder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .reminder-item {
-      border: 1px solid var(--border);
-      border-radius: var(--radius-field);
-      padding: 10px 12px;
-      margin-bottom: 8px;
       background: #fff;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      padding: 12px 14px;
       font-size: 14px;
       line-height: 1.4;
     }
 
-    .reminder-main {
-      color: var(--text-main);
+    .reminder-top {
+      display: flex;
+      justify-content: space-between;
       font-weight: 500;
+      color: #111;
       margin-bottom: 4px;
+      gap: 12px;
+    }
+
+    .reminder-note {
+      flex: 1;
       word-break: break-word;
     }
 
-    .reminder-meta {
-      color: var(--text-dim);
+    .reminder-datetime {
+      white-space: nowrap;
       font-size: 13px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      color: #444;
+      text-align: right;
+    }
+
+    .reminder-bottom {
+      color: #555;
+      font-size: 12px;
+    }
+
+    .reminder-amount {
+      color: #444;
+      font-weight: 400;
+    }
+
+    /* Small helper text / errors */
+    .error-msg {
+      margin-top: 12px;
+      background: #fff4f4;
+      border: 1px solid #ffbcbf;
+      color: #b00020;
+      font-size: 13px;
+      line-height: 1.4;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: none;
+    }
+
+    .success-msg {
+      margin-top: 12px;
+      background: #f0fff4;
+      border: 1px solid #acf0c3;
+      color: #035e1d;
+      font-size: 13px;
+      line-height: 1.4;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: none;
+    }
+
+    /* "invisible" helper not to flash raw JSON */
+    pre#debugRaw {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="header-row">
-      <div class="bell">🔔</div>
-      <h1>Farcaster Reminder</h1>
-    </div>
-
-    <!-- HATIRLATMA FORMU -->
-    <div class="field-block">
-      <div class="label-row">
-        <span>Hatırlatma Notu</span>
-        <span class="example">örn. “12:00 toplantıyı unutma”</span>
+  <div class="page">
+    <div class="card">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="header-emoji">🔔</div>
+        <div class="header-title">Farcaster Reminder</div>
       </div>
-      <textarea id="noteInput" class="textarea-like" placeholder="Ne için ping almak istiyorsun?"></textarea>
-    </div>
 
-    <div class="row-2col">
-      <div class="col-half">
-        <div class="label-row">
-          <span>Tarih</span>
-          <span class="example">(gg.aa.yyyy)</span>
+      <!-- REMINDER NOTE FIELD -->
+      <div class="section">
+        <div class="section-label">
+          <span>Reminder Note</span>
+          <span class="section-hint">ex. "Don't forget the meeting at 12:00"</span>
         </div>
-        <div class="date-time-wrapper">
+        <textarea
+          id="noteInput"
+          class="note-area"
+          placeholder='What should we remind you about?'
+        ></textarea>
+      </div>
+
+      <!-- DATE / TIME ROW -->
+      <div class="row-inline">
+        <!-- DATE -->
+        <div class="field">
+          <label class="field-label" for="dateInput">
+            <span>
+              <span class="label-main">Date</span>
+              <span class="field-hint">(dd.mm.yyyy)</span>
+            </span>
+          </label>
           <input
             id="dateInput"
-            class="date-time-input"
+            class="text-input"
             type="date"
+            required
           />
-          <div class="date-time-icon">📅</div>
         </div>
-      </div>
 
-      <div class="col-half">
-        <div class="label-row">
-          <span>Saat</span>
-          <span class="example">(ss:dd)</span>
-        </div>
-        <div class="date-time-wrapper">
+        <!-- TIME -->
+        <div class="field">
+          <label class="field-label" for="timeInput">
+            <span>
+              <span class="label-main">Time</span>
+              <span class="field-hint">(hh:mm)</span>
+            </span>
+          </label>
           <input
             id="timeInput"
-            class="date-time-input"
+            class="text-input"
             type="time"
+            required
           />
-          <div class="date-time-icon">⏰</div>
         </div>
       </div>
-    </div>
 
-    <button id="saveBtn" class="save-btn">Kaydet</button>
-
-    <!-- Liste -->
-    <div class="list-wrapper" id="reminderListWrapper" style="display:none;">
-      <div class="list-title">
-        <span class="clock">🗒️</span>
-        <span>Kaydedilen Hatırlatmalar</span>
+      <!-- SAVE BUTTON -->
+      <div class="save-wrap">
+        <button class="save-btn" id="saveBtn">Save</button>
       </div>
-      <div id="reminderList"></div>
+
+      <!-- feedback messages -->
+      <div class="error-msg" id="errorBox"></div>
+      <div class="success-msg" id="successBox"></div>
+
+      <!-- LIST OF SAVED REMINDERS -->
+      <div class="reminder-list-wrap">
+        <div class="reminder-list-title">
+          <span>Saved Reminders</span>
+        </div>
+        <div id="reminderList" class="reminder-list"></div>
+      </div>
+
+      <!-- hidden debug pre (keeps old behavior off-screen) -->
+      <pre id="debugRaw"></pre>
     </div>
   </div>
 
   <script>
-    // Farcaster Preview Tool splash warning için
+    // tell Farcaster Preview Tool "content is ready"
     window.onload = () => {
-      if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
+      if (window.sdk?.actions?.ready) {
         window.sdk.actions.ready();
       }
     };
 
-    // local state - sadece UI için
-    const reminders = [];
+    // helper to escape HTML in user text
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
 
-    function renderReminders() {
-      const wrapper = document.getElementById("reminderListWrapper");
-      const listEl = document.getElementById("reminderList");
-      listEl.innerHTML = "";
+    // show error / success feedback inline
+    function showError(msg) {
+      const box = document.getElementById("errorBox");
+      const okBox = document.getElementById("successBox");
+      okBox.style.display = "none";
 
-      if (reminders.length === 0) {
-        wrapper.style.display = "none";
+      box.innerText = msg;
+      box.style.display = "block";
+    }
+
+    function showSuccess(msg) {
+      const box = document.getElementById("successBox");
+      const errBox = document.getElementById("errorBox");
+      errBox.style.display = "none";
+
+      box.innerText = msg;
+      box.style.display = "block";
+    }
+
+    // append one reminder card into the list
+    function appendReminderToList({
+      note,
+      dateVal,
+      timeVal,
+      ethNeeded,
+      usdAmount
+    }) {
+      const list = document.getElementById("reminderList");
+
+      const item = document.createElement("div");
+      item.className = "reminder-item";
+      item.innerHTML = `
+        <div class="reminder-top">
+          <div class="reminder-note">${escapeHtml(note)}</div>
+          <div class="reminder-datetime">${dateVal} ${timeVal}</div>
+        </div>
+        <div class="reminder-bottom">
+          <span class="reminder-amount">
+            Payment draft: ${Number(ethNeeded).toFixed(6)} ETH (~$${usdAmount})
+          </span>
+        </div>
+      `;
+
+      // newest first
+      list.prepend(item);
+    }
+
+    async function handleSaveClick() {
+      const noteEl = document.getElementById("noteInput");
+      const dateEl = document.getElementById("dateInput");
+      const timeEl = document.getElementById("timeInput");
+      const rawNote = noteEl.value.trim();
+      const rawDate = dateEl.value;  // yyyy-mm-dd from <input type="date">
+      const rawTime = timeEl.value;  // hh:mm from <input type="time">
+
+      // basic validation
+      if (!rawNote) {
+        showError("Please enter a reminder note.");
+        return;
+      }
+      if (!rawDate) {
+        showError("Please pick a date.");
+        return;
+      }
+      if (!rawTime) {
+        showError("Please pick a time.");
         return;
       }
 
-      wrapper.style.display = "block";
+      // build ISO string-ish. We'll just treat it as UTC for now.
+      // rawDate is "2025-10-27", rawTime is "13:45"
+      const datetimeISO = `${rawDate}T${rawTime}:00Z`;
 
-      reminders.forEach(r => {
-        const item = document.createElement("div");
-        item.className = "reminder-item";
-
-        const main = document.createElement("div");
-        main.className = "reminder-main";
-        main.textContent = r.note || "(boş not)";
-
-        const meta = document.createElement("div");
-        meta.className = "reminder-meta";
-        meta.textContent = r.date + " " + r.time;
-
-        item.appendChild(main);
-        item.appendChild(meta);
-        listEl.appendChild(item);
-      });
-    }
-
-    function mockBuildPaymentDraft() {
-      // burası şu an sadece gösterim için.
-      // ileride burada tx taslağını backend'e yazıp
-      // cüzdan imzası başlatacağız.
-      const mockDraft = {
-        ok: true,
-        message: "Taslak oluşturuldu ama zincire gönderilmedi."
+      // body we send to /api/pay
+      // You can tune fid / usdAmount / ethAddress etc. in your backend
+      const body = {
+        fid: 1234,
+        usdAmount: 0.05,
+        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12",
+        note: rawNote,
+        datetimeISO
       };
-      console.log("Ödeme taslağı:", mockDraft);
-      return mockDraft;
+
+      try {
+        const res = await fetch("/api/pay", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        // optional: keep debug hidden
+        document.getElementById("debugRaw").innerText = JSON.stringify(
+          data,
+          null,
+          2
+        );
+
+        if (!data || data.ok !== true) {
+          showError("Something went wrong while creating payment draft.");
+          return;
+        }
+
+        // success UI
+        showSuccess("Reminder saved.");
+
+        appendReminderToList({
+          note: rawNote,
+          dateVal: formatDateForCard(rawDate),
+          timeVal: rawTime,
+          ethNeeded: data.ethNeeded ?? 0,
+          usdAmount: data.usdAmount ?? "0.00"
+        });
+
+        // clear fields
+        noteEl.value = "";
+        dateEl.value = "";
+        timeEl.value = "";
+      } catch (err) {
+        console.error("Save error:", err);
+        showError("Network error. Please try again.");
+      }
     }
 
-    document.getElementById("saveBtn").addEventListener("click", async () => {
-      const note = document.getElementById("noteInput").value.trim();
-      const date = document.getElementById("dateInput").value;
-      const time = document.getElementById("timeInput").value;
+    // small helper: convert yyyy-mm-dd -> dd.mm.yyyy for display
+    function formatDateForCard(yyyyMmDd) {
+      if (!yyyyMmDd || !yyyyMmDd.includes("-")) return yyyyMmDd;
+      const [y, m, d] = yyyyMmDd.split("-");
+      return `${d}.${m}.${y}`;
+    }
 
-      // basit doğrulama
-      if (!note) {
-        alert("Lütfen bir not gir 🙏");
-        return;
-      }
-      if (!date) {
-        alert("Lütfen tarih seç 🙏");
-        return;
-      }
-      if (!time) {
-        alert("Lütfen saat seç 🙏");
-        return;
-      }
-
-      // UI listesine ekle
-      reminders.push({
-        note,
-        date,
-        time
-      });
-      renderReminders();
-
-      // formu temizle
-      document.getElementById("noteInput").value = "";
-      document.getElementById("dateInput").value = "";
-      document.getElementById("timeInput").value = "";
-
-      // ödeme taslağını hazırla (şimdilik sadece console.log)
-      mockBuildPaymentDraft();
-
-      // burada ileride /api/pay'e POST atıcaz cüzdan taslağı için
-      // şu an kullanıcıya ekstra kutu göstermiyoruz
-    });
+    // attach handler
+    document
+      .getElementById("saveBtn")
+      .addEventListener("click", handleSaveClick);
   </script>
 </body>
+</html>
+
 </html>
 
