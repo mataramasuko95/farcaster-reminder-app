@@ -1,17 +1,18 @@
 const fs = require("fs");
 const path = require("path");
 
-module.exports = (req, res) => {
-  // sadece GET izin ver
+module.exports = function handler(req, res) {
+  // Sadece GET isteklerine izin veriyoruz
   if (req.method !== "GET") {
     return res.status(405).send("Method Not Allowed");
   }
 
-  // repo root'taki index.html yolunu hazırla
+  // Proje kökünden index.html dosyasını oku
   const filePath = path.join(process.cwd(), "index.html");
 
   try {
     const html = fs.readFileSync(filePath, "utf8");
+
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.status(200).send(html);
   } catch (err) {
