@@ -1,73 +1,81 @@
 // api/pay.js
-//
-// This endpoint pretends to create a payment draft for the reminder.
-// In production you'd build a real tx that pays ~0.05 USD in ETH.
-// Right now we just simulate it and respond with mock numbers.
+// Bu endpoint "payment draft" üretir. Gerçek ağdaki tx'i HENÜZ göndermiyor.
+// Client (index.html) burayı POST eder, biz de geri ödeme taslağını döneriz.
 
-function usdToEth(usdAmount) {
-  // super fake conversion: assume 1 ETH = 3000 USD
-  const eth = usdAmount / 3000;
-  return eth;
-}
-
-module.exports = async function handler(req, res) {
-  // Only POST is allowed
+module.exports = function handler(req, res) {
+  // Sadece POST'e izin veriyoruz.
   if (req.method !== "POST") {
     return res.status(405).json({
       ok: false,
-      error: "Only POST allowed. Send JSON body.",
+      error: "Only POST allowed. Send JSON body."
     });
   }
 
   try {
-    const { note, dateISO, timeISO } = req.body || {};
+    // body'den reminder bilgisini alıyoruz
+    // (index.html şu alanları yolluyor olacak)
+    const {
+      note,          // string: kullanıcının yazdığı hatırlatma
+      datetimeISO,   // string ISO tarih: "2025-10-09T18:44"
+      usdAmount      // sayı: kaç USD değerlik ödeme istiyoruz (ör: 0.05)
+    } = req.body || {};
 
-    // basic validation
-    if (!note || !dateISO || !timeISO) {
+    // Basit validation
+    if (!note || !datetimeISO || !usdAmount) {
       return res.status(400).json({
         ok: false,
-        error: "note, dateISO, and timeISO are required.",
-        exampleBody: {
-          note: "Team call",
-          dateISO: "2025-10-15",
-          timeISO: "18:30",
-        },
+        error: "Missing required fields: note, datetimeISO, usdAmount"
       });
     }
 
-    // pretend cost ~ $0.05
-    const usdAmount = 0.05;
-    const ethNeeded = usdToEth(usdAmount);
+    // Ödemelerin gideceği adres = SENİN ADRESİN 💸
+    const PAYMENT_ADDRESS = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
 
-    // fake unsigned tx
-    const unsignedTx = {
-      to: "0xABC01234567890abcdef1234567890ABCDEF12",
-      valueEth: ethNeeded.toFixed(8), // string
-      data: "0x", // no data for now
+    // USD -> ETH çevirme (şu an sahte sabit kur)
+    // Varsayım: 1 ETH = 3000 USD
+    // Bunu sonra gerçek on-chain/price feed'e çekebiliriz ama MVP için sabit.
+    const usdToEth = (usd) => {
+      const eth = usd / 3000;
+      return eth;
     };
 
-    // build nice human info
-    const costEth = ethNeeded.toFixed(8);
-    // ~0.05 USD
-    const costUsd = usdAmount.toFixed(2);
+    const ethNeeded = usdToEth(Number(usdAmount));
 
-    // respond with a "draft"
+    // Ethereum tx taslağı:
+    // value (wei değil ETH string olarak gösteriyoruz UI için),
+    // data: "0x" => normal ETH transferi
+    const unsignedTx = {
+      to: PAYMENT_ADDRESS,
+      valueEth: ethNeeded.toFixed(8), // "0.00001667" gibi
+      data: "0x"
+    };
+
+    // Kullanıcıya geri döndüğümüz şey:
+    // - reminder içeriği
+    // - tarih
+    // - tahmini ödeme
+    // - tx taslağı
     return res.status(200).json({
       ok: true,
-      message: "Payment draft created",
-      paymentDraft: {
-        costEth,
-        costUsd,
-        unsignedTx,
+      reminder: {
+        note,
+        datetimeISO
       },
+      payment: {
+        usdAmount,
+        ethNeeded,
+        approxUsd: usdAmount, // zaten usdAmount
+        unsignedTx,
+        disclaimer:
+          "This is only a draft transaction. It has NOT been sent or signed yet."
+      }
     });
   } catch (err) {
     console.error("pay.js error:", err);
     return res.status(500).json({
       ok: false,
-      error: "Unexpected server error while creating draft.",
+      error: "Unexpected error in /api/pay"
     });
   }
 };
-
 
