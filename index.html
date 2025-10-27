@@ -344,159 +344,133 @@
   </div>
 
   <script>
-    // tell Farcaster Preview Tool "content is ready"
-    window.onload = () => {
-      if (window.sdk?.actions?.ready) {
-        window.sdk.actions.ready();
-      }
-    };
+  // state
+  let reminders = [];
 
-    // helper to escape HTML in user text
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+  async function handleSave() {
+    const noteInput = document.getElementById("noteInput");
+    const dateInput = document.getElementById("dateInput");
+    const timeInput = document.getElementById("timeInput");
+    const statusBox = document.getElementById("statusBox");
+    const listBox = document.getElementById("savedList");
+
+    // clear previous status
+    statusBox.textContent = "";
+
+    const note = noteInput.value.trim();
+    const dateVal = dateInput.value; // "2025-10-27"
+    const timeVal = timeInput.value; // "12:30"
+
+    // basic validation
+    if (!note || !dateVal || !timeVal) {
+      statusBox.textContent = "Please fill note, date and time.";
+      return;
     }
 
-    // show error / success feedback inline
-    function showError(msg) {
-      const box = document.getElementById("errorBox");
-      const okBox = document.getElementById("successBox");
-      okBox.style.display = "none";
+    // combine date+time into ISO
+    // dateVal is yyyy-mm-dd, timeVal is hh:mm
+    const datetimeISO = new Date(`${dateVal}T${timeVal}:00`).toISOString();
 
-      box.innerText = msg;
-      box.style.display = "block";
-    }
-
-    function showSuccess(msg) {
-      const box = document.getElementById("successBox");
-      const errBox = document.getElementById("errorBox");
-      errBox.style.display = "none";
-
-      box.innerText = msg;
-      box.style.display = "block";
-    }
-
-    // append one reminder card into the list
-    function appendReminderToList({
+    // 1. locally save reminder
+    const newReminder = {
       note,
-      dateVal,
-      timeVal,
-      ethNeeded,
-      usdAmount
-    }) {
-      const list = document.getElementById("reminderList");
+      datetimeISO,
+    };
+    reminders.push(newReminder);
 
-      const item = document.createElement("div");
-      item.className = "reminder-item";
-      item.innerHTML = `
-        <div class="reminder-top">
-          <div class="reminder-note">${escapeHtml(note)}</div>
-          <div class="reminder-datetime">${dateVal} ${timeVal}</div>
-        </div>
-        <div class="reminder-bottom">
-          <span class="reminder-amount">
-            Payment draft: ${Number(ethNeeded).toFixed(6)} ETH (~$${usdAmount})
-          </span>
-        </div>
-      `;
+    // re-render saved reminders list
+    renderSavedList();
 
-      // newest first
-      list.prepend(item);
+    // 2. ask backend to create payment draft
+    try {
+      const res = await fetch("/api/pay", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          note,
+          datetimeISO,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        statusBox.textContent =
+          "Something went wrong while creating payment draft.";
+        return;
+      }
+
+      // Build a human-friendly summary:
+      // ex: "Draft tx -> send 0.00001667 ETH (~$0.05) to 0xABC0..."
+      const toAddr = data.unsignedTx?.to || "";
+      const valEth = data.unsignedTx?.valueEth || "";
+      const usd = data.usdAmount || "";
+      const summary = `Draft tx: send ${valEth} ETH (~$${usd}) to ${toAddr}.`;
+
+      statusBox.textContent = summary;
+      statusBox.style.color = "#000"; // make sure it's readable
+      statusBox.style.background = "#F5F5F5";
+
+    } catch (err) {
+      console.error("fetch /api/pay failed:", err);
+      statusBox.textContent =
+        "Network error while creating payment draft.";
     }
 
-    async function handleSaveClick() {
-      const noteEl = document.getElementById("noteInput");
-      const dateEl = document.getElementById("dateInput");
-      const timeEl = document.getElementById("timeInput");
-      const rawNote = noteEl.value.trim();
-      const rawDate = dateEl.value;  // yyyy-mm-dd from <input type="date">
-      const rawTime = timeEl.value;  // hh:mm from <input type="time">
+    // 3. clear inputs
+    noteInput.value = "";
+    // keep date/time maybe? up to you
+  }
 
-      // basic validation
-      if (!rawNote) {
-        showError("Please enter a reminder note.");
-        return;
-      }
-      if (!rawDate) {
-        showError("Please pick a date.");
-        return;
-      }
-      if (!rawTime) {
-        showError("Please pick a time.");
-        return;
-      }
+  function renderSavedList() {
+    const listBox = document.getElementById("savedList");
+    if (reminders.length === 0) {
+      listBox.innerHTML = "<div class='saved-empty'>No reminders yet.</div>";
+      return;
+    }
 
-      // build ISO string-ish. We'll just treat it as UTC for now.
-      // rawDate is "2025-10-27", rawTime is "13:45"
-      const datetimeISO = `${rawDate}T${rawTime}:00Z`;
-
-      // body we send to /api/pay
-      // You can tune fid / usdAmount / ethAddress etc. in your backend
-      const body = {
-        fid: 1234,
-        usdAmount: 0.05,
-        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12",
-        note: rawNote,
-        datetimeISO
-      };
-
-      try {
-        const res = await fetch("/api/pay", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
+    listBox.innerHTML = reminders
+      .map((r) => {
+        const dt = new Date(r.datetimeISO);
+        const niceDate = dt.toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         });
+        return `
+          <div class="saved-item">
+            <div class="saved-note">${escapeHtml(r.note)}</div>
+            <div class="saved-time">${niceDate}</div>
+          </div>
+        `;
+      })
+      .join("");
+  }
 
-        const data = await res.json();
-        // optional: keep debug hidden
-        document.getElementById("debugRaw").innerText = JSON.stringify(
-          data,
-          null,
-          2
-        );
+  // small helper for XSS safety
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-        if (!data || data.ok !== true) {
-          showError("Something went wrong while creating payment draft.");
-          return;
-        }
+  // call once so "No reminders yet." shows on load
+  renderSavedList();
 
-        // success UI
-        showSuccess("Reminder saved.");
-
-        appendReminderToList({
-          note: rawNote,
-          dateVal: formatDateForCard(rawDate),
-          timeVal: rawTime,
-          ethNeeded: data.ethNeeded ?? 0,
-          usdAmount: data.usdAmount ?? "0.00"
-        });
-
-        // clear fields
-        noteEl.value = "";
-        dateEl.value = "";
-        timeEl.value = "";
-      } catch (err) {
-        console.error("Save error:", err);
-        showError("Network error. Please try again.");
-      }
+  // connect click
+  window.addEventListener("DOMContentLoaded", () => {
+    const saveBtn = document.getElementById("saveBtn");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", handleSave);
     }
-
-    // small helper: convert yyyy-mm-dd -> dd.mm.yyyy for display
-    function formatDateForCard(yyyyMmDd) {
-      if (!yyyyMmDd || !yyyyMmDd.includes("-")) return yyyyMmDd;
-      const [y, m, d] = yyyyMmDd.split("-");
-      return `${d}.${m}.${y}`;
-    }
-
-    // attach handler
-    document
-      .getElementById("saveBtn")
-      .addEventListener("click", handleSaveClick);
-  </script>
+  });
+</script>
 </body>
 </html>
 
