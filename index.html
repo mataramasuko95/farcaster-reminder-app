@@ -9,183 +9,190 @@
     <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
     <style>
-      :root {
-        --bg: #fdfdfd;
-        --card: #ffffff;
-        --border: #ddd;
-        --text-main: #111;
-        --text-dim: #666;
-        --accent: #000;
-        --radius-lg: 16px;
-        --radius-md: 10px;
-        --radius-sm: 6px;
-        --font: -apple-system,BlinkMacSystemFont,"Inter","SF Pro Text","Roboto","Segoe UI",system-ui,sans-serif;
-      }
+  /* Genel sayfa stili */
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    background-color: #fdf8e7; /* yumuşak krem */
+    margin: 0;
+    padding: 24px;
+    color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+  }
 
-      body {
-        background-color: var(--bg);
-        color: var(--text-main);
-        font-family: var(--font);
-        margin: 0;
-        padding: 24px 16px 80px;
-        display: flex;
-        justify-content: center;
-      }
+  /* Ana kart */
+  .card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 16px;
+    box-shadow:
+      0 14px 30px rgba(0,0,0,0.08),
+      0 4px 8px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: 20px 20px 16px;
+    box-sizing: border-box;
+  }
 
-      .app-shell {
-        width: 100%;
-        max-width: 480px;
-      }
+  /* Başlık alanı */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
 
-      .header-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 20px 16px;
-        text-align: center;
-        box-shadow: 0 12px 28px rgba(0,0,0,0.04);
-      }
+  .emoji-badge {
+    font-size: 28px;
+    line-height: 1;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
 
-      .emoji-badge {
-        font-size: 28px;
-        line-height: 1;
-        display: inline-block;
-        margin-bottom: 8px;
-      }
+  .app-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+    margin: 0 0 6px;
+  }
 
-      .title {
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--text-main);
-        margin: 0 0 6px;
-      }
+  .app-desc {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #444;
+    margin: 0;
+  }
 
-      .subtitle {
-        font-size: 14px;
-        line-height: 1.4;
-        color: var(--text-dim);
-        margin: 0;
-      }
+  /* Alan etiketleri */
+  .section-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .section-label-row .hint {
+    color: #777;
+    font-style: italic;
+  }
 
-      .note-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.04);
-        margin-top: 16px;
-        padding: 16px;
-      }
+  /* Not kutusu */
+  textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: none;
+    box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    background-color: #fff;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 12px 14px;
+    color: #000;
+    outline: none;
+  }
 
-      .field-label {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text-main);
-        margin-bottom: 6px;
-        display: flex;
-        justify-content: space-between;
-      }
+  textarea::placeholder {
+    color: #999;
+  }
 
-      .field-hint {
-        font-size: 12px;
-        color: var(--text-dim);
-        font-weight: 400;
-      }
+  /* Tarih + Saat satırı */
+  .row-inline {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
 
-      textarea.note-input {
-        width: 100%;
-        background: #fafafa;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 12px;
-        min-height: 80px;
-        font-family: inherit;
-        font-size: 14px;
-        color: var(--text-main);
-        resize: none;
-        outline: none;
-      }
+  .field-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
 
-      textarea.note-input:focus {
-        border-color: var(--accent);
-        background: #fff;
-      }
+  .field-label {
+    font-size: 12px;
+    color: #555;
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-      .time-row {
-        display: flex;
-        gap: 12px;
-        margin-top: 16px;
-      }
+  .input-like {
+    width: 100%;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    background-color: #fff;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #000;
+    line-height: 1.3;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
 
-      .time-field {
-        flex: 1;
-      }
+  .input-like input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+    color: #000;
+    padding: 0;
+  }
 
-      input.time-input,
-      input.date-input {
-        width: 100%;
-        box-sizing: border-box;
-        background: #fafafa;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 10px 12px;
-        font-size: 14px;
-        color: var(--text-main);
-        outline: none;
-      }
+  .input-like input::placeholder {
+    color: #777;
+  }
 
-      input.time-input:focus,
-      input.date-input:focus {
-        border-color: var(--accent);
-        background: #fff;
-      }
+  /* Kaydet butonu */
+  .save-row {
+    display: flex;
+    justify-content: center;
+  }
 
-      .save-btn-wrap {
-        margin-top: 20px;
-        text-align: center;
-      }
+  #saveBtn {
+    appearance: none;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    background-color: #000;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 12px 20px;
+    min-width: 120px;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
 
-      button.save-btn {
-        -webkit-appearance: none;
-        appearance: none;
-        background: var(--accent);
-        color: #fff;
-        border: 0;
-        border-radius: var(--radius-md);
-        font-size: 15px;
-        font-weight: 600;
-        line-height: 1.2;
-        padding: 12px 16px;
-        min-width: 140px;
-        cursor: pointer;
-      }
+  #saveBtn:active {
+    transform: scale(0.98);
+  }
 
-      button.save-btn:active {
-        opacity: 0.85;
-        transform: scale(.99);
-      }
+  /* Sonuç kutusu (kullanıcıya mesaj gösterdiğimiz yer) */
+  .result-box {
+    margin-top: 16px;
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.07);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 
-      .result-card {
-        background: #fafafa;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        margin-top: 20px;
-        padding: 12px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 13px;
-        line-height: 1.4;
-        color: var(--text-main);
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
+  /* Not: preview tool için body zaten dar bir container içinde.
+     normal browser'da ortalanmış görünsün diye yukarıdaki flex var */
+</style>
 
-      .footer-hint {
-        margin-top: 16px;
-        font-size: 12px;
-        line-height: 1.4;
-        color: var(--text-dim);
-        text-align: center;
-      }
-    </style>
 
     <script>
       async function sendPayRequest() {
