@@ -1,9 +1,3 @@
-// Sahte USD -> ETH kuru
-function usdToEth(usdAmount) {
-  const eth = usdAmount / 3000;
-  return eth;
-}
-
 module.exports = function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
@@ -13,44 +7,49 @@ module.exports = function handler(req, res) {
   }
 
   try {
-    const { fid, usdAmount, ethAddress } = req.body || {};
+    const { fid, note, remindAt } = req.body || {};
 
-    // basit validation
-    if (!fid || !usdAmount || !ethAddress) {
+    // Basit doğrulama
+    if (!fid || !note || !remindAt) {
       return res.status(400).json({
         ok: false,
-        error: "fid, usdAmount, ethAddress zorunlu.",
+        error: "fid, note ve remindAt zorunlu.",
         exampleBody: {
           fid: 1234,
-          usdAmount: 0.05,
-          ethAddress: "0xABCDEF...",
+          note: "Yarın 10:00'da X kişisine ödeme hatırlat",
+          remindAt: "2025-10-28T10:30"
         },
       });
     }
 
-    // kaç ETH lazım?
-    const ethNeeded = usdToEth(Number(usdAmount));
+    // Burada:
+    // - note'u DB'ye yazabiliriz
+    // - remindAt zamanına göre bir "hatırlatma job'u" planlayabiliriz
+    // - ödeme taslağı (unsignedTx vs) hazırlayabiliriz (şimdilik opsiyonel)
 
-    // henüz imzalanmamış tx taslağı
+    // DEMO: Sahte taslak veri hazırlayalım, ama kullanıcıya göstermiyoruz.
     const unsignedTx = {
-      to: ethAddress,
-      valueEth: ethNeeded.toFixed(8),
-      data: "0x",
+      to: "0xABC01234567890abcdef1234567890ABCDEF12",
+      valueEth: "0.00001667",
+      data: "0x"
     };
 
     return res.status(200).json({
       ok: true,
       fid,
-      usdAmount,
-      ethNeeded,
-      unsignedTx,
-      note: "Bu sadece taslak tx. Henüz zincire gönderilmedi.",
+      note,
+      remindAt,
+      message: "Not oluşturuldu ve zamanlandı (taslak).",
+      internal: {
+        unsignedTx,
+        info: "Henüz zincire gönderilmedi."
+      }
     });
   } catch (err) {
     console.error("pay handler error:", err);
     return res.status(500).json({
       ok: false,
-      error: "Internal error in pay handler",
+      error: "Beklenmeyen bir hata oluştu.",
     });
   }
 };
