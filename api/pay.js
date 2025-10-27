@@ -1,3 +1,4 @@
+// usd -> eth (sahte kur: 1 ETH = 3000 USD)
 function usdToEth(usdAmount) {
   const eth = usdAmount / 3000;
   return eth;
@@ -44,9 +45,8 @@ module.exports = function handler(req, res) {
     });
   } catch (err) {
     console.error("pay endpoint error:", err);
-    return res.status(500).json({
-      ok: false,
-      error: "internal_error",
-    });
+    return res
+      .status(500)
+      .json({ ok: false, error: "internal_error" });
   }
 };
