@@ -1,204 +1,277 @@
 <!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Farcaster Reminder Mini App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
-        background-color: #fafafa;
-        color: #111;
-        margin: 0;
-        padding: 24px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+<head>
+  <meta charset="UTF-8" />
+  <title>Farcaster Reminder Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+      background-color: #fafafa;
+      color: #111;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      max-width: 480px;
+      width: 100%;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header-icon {
+      font-size: 32px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 8px 0 4px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      margin: 16px 0 6px;
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: none;
+      border: 1px solid #dcdcdc;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      line-height: 1.4;
+      font-family: inherit;
+      background-color: #fff;
+      box-sizing: border-box;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+    }
+
+    input[type="datetime-local"] {
+      width: 100%;
+      border: 1px solid #dcdcdc;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+      background-color: #fff;
+      outline: none;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    input[type="datetime-local"]:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+    }
+
+    .save-row {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      background: #111;
+      color: #fff;
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 500;
+      padding: 12px 16px;
+      cursor: pointer;
+      min-width: 120px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    button:active {
+      transform: scale(.98);
+    }
+
+    .output-wrapper {
+      max-width: 480px;
+      width: 100%;
+      background: #f5f5f5;
+      border: 1px solid #e1e1e1;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #222;
+      margin-top: 24px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .status-ok {
+      color: #2e7d32;
+      font-weight: 500;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .status-err {
+      color: #b00020;
+      font-weight: 500;
+      margin-top: 12px;
+      text-align: center;
+    }
+  </style>
+
+  <!-- Farcaster miniapp sdk (cüzdan çağrısı için) -->
+  <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
+
+  <script>
+    async function handleSave() {
+      const noteText = document.getElementById("noteInput").value.trim();
+      const remindLocal = document.getElementById("timeInput").value.trim();
+      const outputBox = document.getElementById("output");
+      const statusBox = document.getElementById("statusBox");
+
+      // basic validation
+      if (!noteText) {
+        statusBox.innerHTML = '<div class="status-err">Not boş olamaz 🙃</div>';
+        return;
+      }
+      if (!remindLocal) {
+        statusBox.innerHTML = '<div class="status-err">Zaman seçmelisin ⏰</div>';
+        return;
       }
 
-      .card {
-        max-width: 480px;
-        width: 100%;
-        background: #fff;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
-        padding: 20px 24px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.04);
-      }
+      // datetime-local formatı genelde "2025-10-28T10:30"
+      // Biz bunu "2025-10-28T10:30:00Z" haline getiriyoruz.
+      const remindAtIso = remindLocal + ":00Z";
 
-      .header {
-        text-align: center;
-        margin-bottom: 24px;
-      }
+      // Şu an sabit değerler:
+      // - fid: 1234 (ileride gerçek kullanıcı FID'i)
+      // - usdAmount: 0.05 (sabitledik)
+      // - ethAddress: ödeme gitsin istediğin cüzdan adresi
+      const body = {
+        fid: 1234,
+        usdAmount: 0.05,
+        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12",
+        noteText: noteText,
+        remindAtIso: remindAtIso
+      };
 
-      .header-icon {
-        font-size: 32px;
-      }
+      try {
+        // 1) backend'e isteği gönder
+        const res = await fetch("/api/pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
 
-      .title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 8px 0 4px;
-      }
+        const data = await res.json();
 
-      .subtitle {
-        font-size: 14px;
-        color: #555;
-        line-height: 1.4;
-      }
+        // debug output
+        outputBox.textContent = JSON.stringify(data, null, 2);
 
-      .field-label {
-        font-size: 13px;
-        font-weight: 500;
-        color: #444;
-        margin: 16px 0 6px;
-        display: block;
-      }
-
-      textarea {
-        width: 100%;
-        min-height: 80px;
-        resize: none;
-        border: 1px solid #dcdcdc;
-        border-radius: 10px;
-        padding: 12px 14px;
-        font-size: 15px;
-        line-height: 1.4;
-        font-family: inherit;
-        background-color: #fff;
-        box-sizing: border-box;
-        outline: none;
-      }
-      textarea:focus {
-        border-color: #007aff;
-        box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
-      }
-
-      input[type="datetime-local"] {
-        width: 100%;
-        border: 1px solid #dcdcdc;
-        border-radius: 10px;
-        padding: 10px 12px;
-        font-size: 15px;
-        background-color: #fff;
-        outline: none;
-        box-sizing: border-box;
-      }
-      input[type="datetime-local"]:focus {
-        border-color: #007aff;
-        box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
-      }
-
-      .save-row {
-        text-align: center;
-        margin-top: 20px;
-      }
-
-      button {
-        appearance: none;
-        border: 0;
-        border-radius: 10px;
-        background: #111;
-        color: #fff;
-        font-size: 15px;
-        line-height: 1.2;
-        font-weight: 500;
-        padding: 12px 16px;
-        cursor: pointer;
-        min-width: 120px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      }
-      button:active {
-        transform: scale(.98);
-      }
-
-      .output-wrapper {
-        max-width: 480px;
-        width: 100%;
-        background: #f5f5f5;
-        border: 1px solid #e1e1e1;
-        border-radius: 8px;
-        padding: 16px;
-        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-        font-size: 13px;
-        line-height: 1.4;
-        color: #222;
-        margin-top: 24px;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-    </style>
-
-    <script>
-      async function submitReminder() {
-        // form alanlarını al
-        const note = document.getElementById("note").value.trim();
-        const when = document.getElementById("when").value;
-
-        // basit doğrulama
-        if (!note) {
-          showOutput({ ok:false, error:"Lütfen bir not yaz." });
+        if (!data.ok) {
+          statusBox.innerHTML = '<div class="status-err">Kaydedilemedi ❌</div>';
           return;
         }
-        if (!when) {
-          showOutput({ ok:false, error:"Lütfen bir zaman seç." });
-          return;
+
+        // 2) buraya geldiysek backend bize bir tx verdi
+        statusBox.innerHTML = '<div class="status-ok">Kaydedildi ✅ İşlem hazırlanıyor…</div>';
+
+        // 3) farcaster cüzdanına gönder
+        // Not: Normal tarayıcıda window.farcaster yok. Miniapp içinde olacak.
+        // O yüzden burada guard koyuyoruz.
+        if (
+          window.farcaster &&
+          window.farcaster.wallet &&
+          typeof window.farcaster.wallet.sendTransaction === "function"
+        ) {
+          try {
+            const txReceipt = await window.farcaster.wallet.sendTransaction({
+              chainId: data.tx.chainId,
+              to: data.tx.to,
+              value: data.tx.value,
+              data: data.tx.data,
+            });
+
+            console.log("txReceipt", txReceipt);
+            statusBox.innerHTML = '<div class="status-ok">Kaydedildi ve gönderildi 🎉</div>';
+          } catch (sendErr) {
+            console.error("Kullanıcı iptal etti veya hata:", sendErr);
+            statusBox.innerHTML = '<div class="status-err">İşlem iptal edildi / başarısız 💔</div>';
+          }
+        } else {
+          console.warn("Farcaster wallet API bu ortamda yok (normal tarayıcı).");
+          statusBox.innerHTML = '<div class="status-ok">Kaydedildi ✅ (Test ortamı, cüzdan yok)</div>';
         }
 
-        // backend'e yollayacağımız body
-        const body = {
-          note,          // kullanıcı yazdığı metin
-          remindAtISO: when // datetime-local -> ISO string gibi davranıyoruz
-        };
+        // alanları temizle
+        document.getElementById("noteInput").value = "";
+        document.getElementById("timeInput").value = "";
 
-        try {
-          const res = await fetch("/api/reminder", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-          });
-
-          const data = await res.json();
-          showOutput(data);
-
-        } catch (err) {
-          showOutput({ ok:false, error:"İstek gönderilirken hata oluştu.", detail: String(err) });
-        }
+      } catch (err) {
+        console.error("fetch/pay error:", err);
+        statusBox.innerHTML = '<div class="status-err">Bir şeyler ters gitti ❌</div>';
       }
+    }
+  </script>
+</head>
 
-      function showOutput(obj) {
-        const box = document.getElementById("output");
-        box.textContent = JSON.stringify(obj, null, 2);
-      }
-    </script>
-  </head>
-
-  <body>
-    <div class="card">
-      <div class="header">
-        <div class="header-icon">🔔</div>
-        <div class="title">Farcaster Reminder Mini App</div>
-        <div class="subtitle">
-          Hatırlatma notunu yaz, ne zaman ping almak istediğini seç, kaydet.
-        </div>
-      </div>
-
-      <label class="field-label" for="note">Hatırlatma Notu</label>
-      <textarea id="note" placeholder="Örn: &quot;Yarın 14:30'da @soandso'ya yaz&quot;"></textarea>
-
-      <label class="field-label" for="when">Ne zaman hatırlatayım?</label>
-      <input id="when" type="datetime-local" />
-
-      <div class="save-row">
-        <button onclick="submitReminder()">Kaydet</button>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="header-icon">🔔</div>
+      <div class="title">Farcaster Reminder Mini App</div>
+      <div class="subtitle">
+        Hatırlatma notunu yaz. Saatini seç. Kaydet’e basınca ödeme tx’i tetiklenir.
+        (Ücret kullanıcıya gösterilmez.)
       </div>
     </div>
 
-    <pre id="output" class="output-wrapper">
+    <label class="field-label" for="noteInput">Hatırlatma Notu</label>
+    <textarea
+      id="noteInput"
+      placeholder="Örn: 'Yarın 14:30'da şu kişiye yazmayı unutma'"
+    ></textarea>
+
+    <label class="field-label" for="timeInput">Ne zaman hatırlatayım?</label>
+    <input id="timeInput" type="datetime-local" />
+
+    <div class="save-row">
+      <button onclick="handleSave()">Kaydet</button>
+    </div>
+  </div>
+
+  <div id="statusBox"></div>
+
+  <pre id="output" class="output-wrapper">
 Sonuç burada görünecek...
-    </pre>
-  </body>
+  </pre>
+</body>
 </html>
+
 
