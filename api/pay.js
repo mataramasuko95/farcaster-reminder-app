@@ -1,69 +1,84 @@
 // api/pay.js
-// This serverless function creates a mock "payment draft" for the reminder.
-// It does NOT actually send a transaction onchain.
+//
+// This endpoint receives { note, datetimeISO } from the client
+// and returns a mock payment draft + fee estimation.
+// It NEVER actually sends a tx. It's just a preview.
 
 function usdToEth(usdAmount) {
-  // fake rate: 1 ETH = 3000 USD
-  const rate = 3000;
-  return usdAmount / rate;
+  // fake conversion: 1 ETH = 3000 USD
+  const eth = usdAmount / 3000;
+  return eth;
 }
 
-module.exports = function handler(req, res) {
-  // only allow POST
+// helper: format a tiny USD estimate from ETH
+function approximateUsdFromEth(eth) {
+  // inverse of usdToEth() math above
+  // if eth = 0.000017 => usd ≈ eth * 3000
+  const usd = eth * 3000;
+  return usd;
+}
+
+module.exports = async function handler(req, res) {
+  // Only allow POST
   if (req.method !== "POST") {
-    return res.status(405).json({
-      ok: false,
-      error: "Only POST allowed. Send JSON body.",
-    });
+    return res
+      .status(405)
+      .json({ ok: false, error: "Method Not Allowed. Use POST." });
   }
 
   try {
-    // we expect { note, datetimeISO } from the client
+    // Parse body
     const { note, datetimeISO } = req.body || {};
 
-    // basic validation
+    // Basic validation
     if (!note || !datetimeISO) {
       return res.status(400).json({
         ok: false,
-        error: "note and datetimeISO are required.",
+        error: "Missing note or datetimeISO",
         exampleBody: {
           note: "Pay rent",
-          datetimeISO: "2025-10-27T12:30:00.000Z",
+          datetimeISO: "2025-01-01T12:00:00.000Z",
         },
       });
     }
 
-    // mock fixed values
-    const fid = 1234;
+    // Our fixed mini-app fee in USD (e.g. $0.05)
     const usdAmount = 0.05;
-    const ethAddress = "0xABC01234567890abcdef1234567890ABCDEF12";
 
-    // convert USD to ETH
-    const ethNeeded = usdToEth(usdAmount);
-    const valueEthStr = ethNeeded.toFixed(8); // "0.00001667" style
+    // Convert to ETH estimate (mock)
+    const ethNeeded = usdToEth(usdAmount); // e.g. 0.0000166...
 
-    // make a (not-sent) tx draft object
+    // Build a fake unsigned tx
+    // In a real flow, you'd build a proper calldata / to address etc.
     const unsignedTx = {
-      to: ethAddress,
-      valueEth: valueEthStr,
-      data: "0x", // no calldata for now
+      to: "0xABC01234567890abcdef1234567890ABCDEF12",
+      valueEth: ethNeeded.toFixed(8), // just for display
+      data: "0x",
     };
 
-    return res.status(200).json({
+    // Build the object we send back to the client/UI
+    const result = {
       ok: true,
-      message: "Draft only. Not sent.",
-      fid,
       note,
       datetimeISO,
-      usdAmount,
-      ethNeeded,
-      unsignedTx,
-    });
+      paymentDraft: {
+        ethNeeded,
+        usdAmount,
+        unsignedTx,
+        // also include a human string e.g. "0.000017 ETH (~$0.05)"
+        pretty: `${ethNeeded.toFixed(6)} ETH (~$${approximateUsdFromEth(
+          ethNeeded
+        ).toFixed(2)})`,
+      },
+    };
+
+    return res.status(200).json(result);
   } catch (err) {
     console.error("pay.js error:", err);
+
     return res.status(500).json({
       ok: false,
-      error: "Unexpected server error while building draft.",
+      error: "Internal Server Error while creating draft",
     });
   }
 };
