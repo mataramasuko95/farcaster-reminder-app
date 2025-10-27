@@ -2,46 +2,211 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Farcaster Reminder</title>
+  <title>Farcaster Reminder Mini App</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #fafafa;
+      color: #111;
+      margin: 0;
+      padding: 40px 16px 80px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin: 0 0 8px;
+      color: #111;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 32px;
+    }
+
+    button {
+      background-color: #111;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: 0;
+      border-radius: 6px;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background-color 0.12s ease;
+    }
+    button:hover {
+      background-color: #000;
+    }
+
+    /* kart */
+    .card-wrapper {
+      max-width: 640px;
+      margin: 32px auto 0;
+      text-align: left;
+    }
+
+    .card {
+      background-color: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px 20px;
+      box-shadow: 0 12px 24px -8px rgba(0,0,0,0.08);
+      min-height: 120px;
+    }
+
+    .line {
+      font-size: 0.9rem;
+      line-height: 1.4rem;
+      color: #111;
+      margin: 4px 0;
+      word-break: break-word;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.8rem;
+      line-height: 1.2rem;
+      margin-top: 12px;
+    }
+
+    /* teknik detaylar toggle */
+    .debug-toggle {
+      color: #6b7280;
+      font-size: 0.8rem;
+      text-decoration: underline;
+      cursor: pointer;
+      display: inline-block;
+      margin-top: 16px;
+    }
+
+    pre {
+      background: #111;
+      color: #0f0;
+      font-size: 0.8rem;
+      line-height: 1.2rem;
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 12px;
+    }
+
+    #debugBox {
+      display: none;
+    }
+  </style>
+
+  <!-- Farcaster js SDK (şimdilik dursun, ileride actions / signer entegrasyonu için kullanacağız) -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
+</head>
+
+<body>
+  <h1>🔔 Farcaster Reminder Mini App</h1>
+  <div class="subtitle">
+    Bu mini app, bir ödeme planı taslağı oluşturur (henüz zincire göndermez).
+  </div>
+
+  <button onclick="handleTestClick()">Planı Test Et</button>
+
+  <div class="card-wrapper">
+    <div id="resultCard" class="card">
+      <div class="line muted">
+        Henüz bir taslak oluşturmadın. Yukarıdaki butona tıkla 👆
+      </div>
+    </div>
+
+    <div class="debug-toggle" onclick="toggleDebug()">
+      Teknik detayları göster / gizle
+    </div>
+
+    <pre id="debugBox">{}</pre>
+  </div>
+
   <script>
-    async function sendPayRequest() {
+    async function handleTestClick() {
+      // örnek payload. sonra burayı gerçek inputlarla (fid, tutar vs) dolduracağız.
       const body = {
         fid: 1234,
         usdAmount: 0.05,
-        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12"
+        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12",
       };
 
-      const res = await fetch("/api/pay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+      try {
+        const res = await fetch("/api/pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
 
-      const data = await res.json();
-      document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+        const data = await res.json();
+        renderResultCard(data);
+        renderDebug(data);
+      } catch (err) {
+        console.error("İstek hata verdi:", err);
+        renderError(err);
+      }
     }
 
-    // Farcaster SDK hazır uyarısını bastıran kısım
-    window.onload = () => {
-      if (window.sdk?.actions?.ready) {
-        window.sdk.actions.ready();
+    function renderResultCard(data) {
+      // data beklenen shape:
+      // {
+      //   ok: true,
+      //   fid: 1234,
+      //   usdAmount: 0.05,
+      //   ethNeeded: ...,
+      //   unsignedTx: { to, valueEth, data },
+      //   note: "... açıklama ..."
+      // }
+
+      const el = document.getElementById("resultCard");
+
+      if (!data || data.ok !== true) {
+        el.innerHTML = `
+          <div class="line"><strong>Bir şeyler ters gitti.</strong></div>
+          <div class="line">Sunucudan geçerli bir plan dönmedi.</div>
+        `;
+        return;
       }
-    };
+
+      const shortAddr = data?.unsignedTx?.to
+        ? data.unsignedTx.to.slice(0, 6) + "…" + data.unsignedTx.to.slice(-4)
+        : "(adres yok)";
+
+      el.innerHTML = `
+        <div class="line"><strong>FID:</strong> ${data.fid}</div>
+        <div class="line"><strong>Tutar (USD):</strong> $${data.usdAmount}</div>
+        <div class="line"><strong>Tahmini ETH:</strong> ~${data.ethNeeded} ETH</div>
+        <div class="line"><strong>Hedef adres:</strong> ${shortAddr}</div>
+        <div class="muted">${data.note || ""}</div>
+      `;
+    }
+
+    function renderDebug(data) {
+      const box = document.getElementById("debugBox");
+      box.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function renderError(err) {
+      const el = document.getElementById("resultCard");
+      el.innerHTML = `
+        <div class="line"><strong>Hata!</strong></div>
+        <div class="line">${err?.message || err}</div>
+      `;
+      const box = document.getElementById("debugBox");
+      box.textContent = String(err);
+    }
+
+    function toggleDebug() {
+      const box = document.getElementById("debugBox");
+      box.style.display = (box.style.display === "none" || box.style.display === "") 
+        ? "block" 
+        : "none";
+    }
   </script>
-
-  <style>
-    body { font-family: sans-serif; padding: 2em; text-align: center; }
-    button { padding: 10px 20px; margin: 20px; font-size: 16px; cursor: pointer; }
-    pre { text-align: left; background: #f4f4f4; padding: 10px; border-radius: 10px; }
-  </style>
-</head>
-<body>
-  <h1>🔔 Farcaster Reminder Mini App</h1>
-  <p>Bu mini app ETH ödeme planı taslağı oluşturur.</p>
-
-  <button onclick="sendPayRequest()">Planı Test Et</button>
-
-  <pre id="output">Sonuç burada görünecek...</pre>
 </body>
 </html>
