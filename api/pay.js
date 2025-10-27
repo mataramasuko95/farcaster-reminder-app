@@ -1,4 +1,4 @@
-// usd -> eth (sahte kur: 1 ETH = 3000 USD)
+// Sahte USD -> ETH kuru
 function usdToEth(usdAmount) {
   const eth = usdAmount / 3000;
   return eth;
@@ -15,6 +15,7 @@ module.exports = function handler(req, res) {
   try {
     const { fid, usdAmount, ethAddress } = req.body || {};
 
+    // basit validation
     if (!fid || !usdAmount || !ethAddress) {
       return res.status(400).json({
         ok: false,
@@ -27,8 +28,10 @@ module.exports = function handler(req, res) {
       });
     }
 
+    // kaç ETH lazım?
     const ethNeeded = usdToEth(Number(usdAmount));
 
+    // henüz imzalanmamış tx taslağı
     const unsignedTx = {
       to: ethAddress,
       valueEth: ethNeeded.toFixed(8),
@@ -44,9 +47,10 @@ module.exports = function handler(req, res) {
       note: "Bu sadece taslak tx. Henüz zincire gönderilmedi.",
     });
   } catch (err) {
-    console.error("pay endpoint error:", err);
-    return res
-      .status(500)
-      .json({ ok: false, error: "internal_error" });
+    console.error("pay handler error:", err);
+    return res.status(500).json({
+      ok: false,
+      error: "Internal error in pay handler",
+    });
   }
 };
