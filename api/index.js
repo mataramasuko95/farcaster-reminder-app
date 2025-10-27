@@ -1,13 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 
-module.exports = function handler(req, res) {
-  // sadece GET
+module.exports = (req, res) => {
+  // sadece GET izin ver
   if (req.method !== "GET") {
     return res.status(405).send("Method Not Allowed");
   }
 
-  // repo root'taki index.html dosyasını oku
+  // repo root'taki index.html yolunu hazırla
   const filePath = path.join(process.cwd(), "index.html");
 
   try {
