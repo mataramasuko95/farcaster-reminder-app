@@ -9,7 +9,7 @@
       const body = {
         fid: 1234,
         usdAmount: 0.05,
-        ethAddress: "0xABCD1234567890abcdef1234567890ABCDEF12"
+        ethAddress: "0xABC01234567890abcdef1234567890ABCDEF12"
       };
 
       const res = await fetch("/api/pay", {
@@ -22,7 +22,7 @@
       document.getElementById("output").innerText = JSON.stringify(data, null, 2);
     }
 
-    // Bu kısım Farcaster Preview Tool "ready() çağrısı yapılmadı" uyarısını susturuyor
+    // Farcaster SDK hazır uyarısını bastıran kısım
     window.onload = () => {
       if (window.sdk?.actions?.ready) {
         window.sdk.actions.ready();
@@ -37,10 +37,11 @@
   </style>
 </head>
 <body>
-  <h1>💸 Farcaster Reminder Mini App</h1>
+  <h1>🔔 Farcaster Reminder Mini App</h1>
   <p>Bu mini app ETH ödeme planı taslağı oluşturur.</p>
+
   <button onclick="sendPayRequest()">Planı Test Et</button>
+
   <pre id="output">Sonuç burada görünecek...</pre>
 </body>
 </html>
-
