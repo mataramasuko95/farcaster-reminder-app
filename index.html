@@ -294,231 +294,231 @@
   </div>
 
   <script>
-    // hard-coded receiver wallet (your address)
-    const RECEIVER_ETH_ADDRESS = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
+  // hard-coded receiver wallet (your address)
+  const RECEIVER_ETH_ADDRESS = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
 
-    // pretend fixed $0.05, convert -> ETH (rough fake rate)
-    const USD_AMOUNT = 0.05;
+  // pretend fixed $0.05, convert -> ETH (rough fake rate)
+  const USD_AMOUNT = 0.05;
 
-    // local list of reminders in memory
-    const reminders = [];
+  // local list of reminders in memory
+  const reminders = [];
 
-    function showStatus(type, msg) {
-      const box = document.getElementById("statusBox");
-      box.style.display = "block";
-      box.className = "status-box " + (type === "error" ? "status-error" : "status-ok");
-      box.textContent = msg;
+  function showStatus(type, msg) {
+    const box = document.getElementById("statusBox");
+    box.style.display = "block";
+    box.className = "status-box " + (type === "error" ? "status-error" : "status-ok");
+    box.textContent = msg;
+  }
+
+  function clearStatus() {
+    const box = document.getElementById("statusBox");
+    box.style.display = "none";
+    box.textContent = "";
+  }
+
+  function renderReminders() {
+    const list = document.getElementById("savedList");
+    list.innerHTML = "";
+
+    if (!reminders.length) {
+      const empty = document.createElement("div");
+      empty.className = "saved-empty";
+      empty.textContent = "No saved reminders yet.";
+      list.appendChild(empty);
+      return;
     }
 
-    function clearStatus() {
-      const box = document.getElementById("statusBox");
-      box.style.display = "none";
-      box.textContent = "";
+    reminders.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "reminder-card";
+
+      const top = document.createElement("div");
+      top.className = "reminder-top-row";
+
+      const noteEl = document.createElement("div");
+      noteEl.textContent = r.note || "(no text)";
+
+      const whenEl = document.createElement("div");
+      whenEl.textContent = r.whenFormatted;
+
+      top.appendChild(noteEl);
+      top.appendChild(whenEl);
+
+      const bottom = document.createElement("div");
+      bottom.className = "reminder-bottom-row";
+      const payInfo = document.createElement("div");
+      payInfo.textContent = `Payment draft: ${r.ethNeeded} ETH (~$${USD_AMOUNT.toFixed(2)})`;
+      bottom.appendChild(payInfo);
+
+      card.appendChild(top);
+      card.appendChild(bottom);
+
+      list.appendChild(card);
+    });
+  }
+
+  function fakeUsdToEth(usdAmount) {
+    // Super rough conversion: assume ~3000 USD per 1 ETH.
+    const ETH_PER_USD = 1 / 3000;
+    const ethVal = usdAmount * ETH_PER_USD;
+    return ethVal.toFixed(8); // up to 8 decimals
+  }
+
+  async function createPaymentDraft({ fid, usdAmount, ethAddress }) {
+    // calls our /api/pay with required body
+    const body = {
+      fid,
+      usdAmount,
+      ethAddress
+    };
+
+    const res = await fetch("/api/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      throw new Error("Server error " + res.status);
     }
+    return res.json();
+  }
 
-    function renderReminders() {
-      const list = document.getElementById("savedList");
-      list.innerHTML = "";
+  async function tryGetFidAndWallet() {
+    // Try to get Farcaster user info from the miniapp environment.
+    // If running outside Warpcast in a normal browser, we'll just fail gracefully.
+    let fid = null;
+    let wallet = null;
 
-      if (!reminders.length) {
-        const empty = document.createElement("div");
-        empty.className = "saved-empty";
-        empty.textContent = "No saved reminders yet.";
-        list.appendChild(empty);
-        return;
+    try {
+      if (window.miniapps && typeof window.miniapps.user === "function") {
+        const u = await window.miniapps.user();
+        fid = u.fid;
+        wallet = u.primaryWallet;
       }
+    } catch (err) {
+      console.warn("miniapps.user() failed / not available:", err);
+    }
 
-      reminders.forEach(r => {
-        const card = document.createElement("div");
-        card.className = "reminder-card";
+    return { fid, wallet };
+  }
 
-        const top = document.createElement("div");
-        top.className = "reminder-top-row";
+  async function onSaveClicked() {
+    clearStatus();
 
-        const noteEl = document.createElement("div");
-        noteEl.textContent = r.note || "(no text)";
+    const note = document.getElementById("noteInput").value.trim();
+    const dateVal = document.getElementById("dateInput").value; // yyyy-mm-dd
+    const timeVal = document.getElementById("timeInput").value; // hh:mm
 
-        const whenEl = document.createElement("div");
-        whenEl.textContent = r.whenFormatted;
+    if (!note || !dateVal || !timeVal) {
+      showStatus("error", "Please fill note, date, and time.");
+      return;
+    }
 
-        top.appendChild(noteEl);
-        top.appendChild(whenEl);
+    // Combine date+time into a readable string
+    const whenFormatted = formatDateTime(dateVal, timeVal);
 
-        const bottom = document.createElement("div");
-        bottom.className = "reminder-bottom-row";
-        const payInfo = document.createElement("div");
-        payInfo.textContent = `Payment draft: ${r.ethNeeded} ETH (~$${USD_AMOUNT.toFixed(2)})`;
-        bottom.appendChild(payInfo);
+    // get user fid + wallet (if available via miniapps)
+    const { fid, wallet } = await tryGetFidAndWallet();
 
-        card.appendChild(top);
-        card.appendChild(bottom);
+    // fallback if not provided
+    const fallbackFid = fid || 1234;
+    const fromWallet = wallet || "0xUSER_WALLET_PLACEHOLDER";
 
-        list.appendChild(card);
+    // figure out required ETH for the tiny micro-payment
+    const ethNeeded = fakeUsdToEth(USD_AMOUNT);
+
+    // call backend to make the payment draft
+    let draftResp;
+    try {
+      draftResp = await createPaymentDraft({
+        fid: fallbackFid,
+        usdAmount: USD_AMOUNT,
+        ethAddress: RECEIVER_ETH_ADDRESS
       });
+    } catch (err) {
+      console.error(err);
+      showStatus("error", "Payment draft failed.");
+      return;
     }
 
-    function fakeUsdToEth(usdAmount) {
-      // This is a fake conversion. In production you'd calculate
-      // via backend or config. We'll just use ~3000 USD/ETH.
-      const ETH_PER_USD = 1 / 3000;
-      const ethVal = usdAmount * ETH_PER_USD;
-      return ethVal.toFixed(8); // show up to 8 decimals for readability
-    }
+    console.log("Draft response:", draftResp);
 
-    async function createPaymentDraft({ fid, usdAmount, ethAddress }) {
-      // calls our /api/pay with required body
-      const body = {
-        fid,
-        usdAmount,
-        ethAddress
-      };
-
-      const res = await fetch("/api/pay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-
-      if (!res.ok) {
-        throw new Error("Server error " + res.status);
-      }
-      return res.json();
-    }
-
-    async function tryGetFidAndWallet() {
-      // This tries to query Farcaster miniapp SDK for user data.
-      // If running outside Warpcast it may fail, that's normal in local browser.
-      // We'll gracefully fallback.
-      let fid = null;
-      let wallet = null;
-
-      try {
-        if (window.miniapps && window.miniapps.user) {
-          // hypothetical SDK shape
-          const u = await window.miniapps.user();
-          fid = u.fid;
-          wallet = u.primaryWallet;
-        }
-      } catch (err) {
-        console.warn("miniapps.user() failed / not available:", err);
-      }
-
-      return { fid, wallet };
-    }
-
-    async function onSaveClicked() {
-      clearStatus();
-
-      const note = document.getElementById("noteInput").value.trim();
-      const dateVal = document.getElementById("dateInput").value; // yyyy-mm-dd
-      const timeVal = document.getElementById("timeInput").value; // hh:mm
-
-      if (!note || !dateVal || !timeVal) {
-        showStatus("error", "Please fill note, date, and time.");
-        return;
-      }
-
-      // Convert to a user-friendly "YYYY-MM-DD HH:mm"
-      const whenFormatted = formatDateTime(dateVal, timeVal);
-
-      // get user fid + wallet (if available via miniapps)
-      const { fid, wallet } = await tryGetFidAndWallet();
-
-      // We'll fall back if not provided by miniapps,
-      // so the backend still gets something.
-      const fallbackFid = fid || 1234;
-      const fromWallet = wallet || "0xUSER_WALLET_PLACEHOLDER";
-
-      // We "calculate" required ETH (fake conversion)
-      const ethNeeded = fakeUsdToEth(USD_AMOUNT);
-
-      // prepare on-chain draft via backend
-      let draftResp;
-      try {
-        draftResp = await createPaymentDraft({
-          fid: fallbackFid,
-          usdAmount: USD_AMOUNT,
-          ethAddress: RECEIVER_ETH_ADDRESS
+    // (Optional / best effort) try to open Warpcast's wallet UI:
+    try {
+      if (window.miniapps && typeof window.miniapps.pay === "function") {
+        await window.miniapps.pay({
+          to: RECEIVER_ETH_ADDRESS,
+          valueEth: ethNeeded,
+          note: "Reminder fee"
+          // In a real mini app you'd include chainId / data etc.
         });
-      } catch (err) {
-        console.error(err);
-        showStatus("error", "Payment draft failed.");
-        return;
+      } else {
+        console.log(
+          "[dev] window.miniapps.pay not available. " +
+          "In Warpcast this should open wallet UI."
+        );
       }
+    } catch (err) {
+      console.warn("miniapps.pay() threw:", err);
+      // We don't block saving if user rejects or wallet is unavailable
+    }
 
-      console.log("Draft response:", draftResp);
+    // Save reminder locally so it shows in the list
+    reminders.unshift({
+      note,
+      whenFormatted,
+      ethNeeded,
+      fromWallet,
+      fid: fallbackFid
+    });
 
-      // ask wallet to pay (inside Warpcast):
-      // NOTE: this is conceptual; actual miniapps wallet call
-      // might differ. We just try/catch so browser won't explode.
-      try {
-        if (window.miniapps && window.miniapps.pay) {
-          await window.miniapps.pay({
-            to: RECEIVER_ETH_ADDRESS,
-            // For chain calls you'd pass chainId, data, value, etc.
-            // We'll use our local "ethNeeded" for value.
-            valueEth: ethNeeded,
-            note: "Reminder fee"
-          });
-        } else {
-          console.log(
-            "[dev] window.miniapps.pay not available. " +
-            "In Warpcast this should open wallet UI."
-          );
-        }
-      } catch (err) {
-        console.warn("miniapps.pay() threw:", err);
-        // we *don't* abort saving the reminder if payment UI fails or user rejects
+    renderReminders();
+    showStatus("ok", "Reminder saved and payment draft prepared.");
+    resetForm();
+  }
+
+  function resetForm() {
+    document.getElementById("noteInput").value = "";
+    document.getElementById("dateInput").value = "";
+    document.getElementById("timeInput").value = "";
+  }
+
+  function formatDateTime(yyyyMmDd, hhmm) {
+    // Input: "yyyy-mm-dd", "hh:mm"
+    // Output: "yyyy-mm-dd hh:mm"
+    return `${yyyyMmDd} ${hhmm}`;
+  }
+
+  function init() {
+    // attach click handler
+    const btn = document.getElementById("saveBtn");
+    btn.addEventListener("click", onSaveClicked);
+
+    // tell Warpcast / Farcaster "we are ready" so splash screen can go away
+    try {
+      if (
+        window.miniapps &&
+        window.miniapps.actions &&
+        typeof window.miniapps.actions.ready === "function"
+      ) {
+        window.miniapps.actions.ready();
+      } else if (
+        window.sdk &&
+        window.sdk.actions &&
+        typeof window.sdk.actions.ready === "function"
+      ) {
+        window.sdk.actions.ready();
       }
-
-      // save to local list for display
-      reminders.unshift({
-        note,
-        whenFormatted,
-        ethNeeded,
-        fromWallet,
-        fid: fallbackFid
-      });
-
-      renderReminders();
-      showStatus("ok", "Reminder saved and payment draft prepared.");
-      resetForm();
+    } catch (err) {
+      console.warn("ready() call failed:", err);
     }
 
-    function resetForm() {
-      document.getElementById("noteInput").value = "";
-      document.getElementById("dateInput").value = "";
-      document.getElementById("timeInput").value = "";
-    }
+    renderReminders();
+  }
 
-    function formatDateTime(yyyyMmDd, hhmm) {
-      // yyyy-mm-dd -> dd.mm.yyyy
-      const [y, m, d] = yyyyMmDd.split("-");
-      return `${y}-${m}-${d} ${hhmm}`;
-    }
-
-    function init() {
-      // wire up button
-      const btn = document.getElementById("saveBtn");
-      btn.addEventListener("click", onSaveClicked);
-
-      // let Warpcast know the miniapp is ready (removes splash)
-      try {
-        if (window.miniapps && window.miniapps.actions && window.miniapps.actions.ready) {
-          window.miniapps.actions.ready();
-        } else if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
-          // older naming we used before
-          window.sdk.actions.ready();
-        }
-      } catch (err) {
-        console.warn("ready() call failed:", err);
-      }
-
-      renderReminders();
-    }
-
-    window.onload = init;
-  </script>
+  window.onload = init;
+</script>
 </body>
 </html>
 
