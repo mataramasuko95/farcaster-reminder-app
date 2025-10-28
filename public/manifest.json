@@ -1,38 +1,39 @@
 {
-  "schema_version": 1,
   "id": "farcaster-reminder-app",
   "name": "Reminder",
-  "description": "Write a reminder and pick a date/time. Save will prepare a payment draft.",
+  "description": "Save reminders with a timestamp. Generates a small payment draft for you when you save.",
   "icon": "https://farcaster-reminder-app.vercel.app/icon.png",
   "developer": {
     "name": "mataramasuko95",
     "url": "https://farcaster-reminder-app.vercel.app"
   },
   "website": "https://farcaster-reminder-app.vercel.app",
-  "platforms": ["warpcast"],
+  "platforms": [
+    "warpcast"
+  ],
   "endpoints": {
     "pay": "https://farcaster-reminder-app.vercel.app/api/pay"
   },
   "actions": [
     {
       "type": "post",
-      "name": "Save Reminder",
-      "description": "Save a reminder and get a payment draft.",
+      "name": "Save Reminder + Create Payment Draft",
+      "description": "User writes a reminder and time. We draft a tiny onchain payment they can send.",
       "endpoint": "pay",
       "input": {
         "type": "object",
         "properties": {
           "fid": {
             "type": "number",
-            "description": "Farcaster fid"
+            "description": "User's Farcaster FID"
           },
           "usdAmount": {
             "type": "number",
-            "description": "USD amount (ex: 0.05)"
+            "description": "How much USD-worth of ETH to send (e.g. 0.05)"
           },
           "ethAddress": {
             "type": "string",
-            "description": "Wallet address"
+            "description": "Recipient wallet address"
           }
         },
         "required": ["fid", "usdAmount", "ethAddress"]
@@ -40,4 +41,3 @@
     }
   ]
 }
-
