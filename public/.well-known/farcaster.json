@@ -5,9 +5,9 @@
   "icon": "https://farcaster-reminder-app.vercel.app/icon.png",
   "developer": {
     "name": "mataramasuko95",
-    "url": "https://farcaster-reminder-app.vercel.app"
+    "url": "https://ureminder-app.vercel.app/"
   },
-  "website": "https://farcaster-reminder-app.vercel.app",
+  "website": "https://ureminder-app.vercel.app/",
   "platforms": [
     "warpcast"
   ],
