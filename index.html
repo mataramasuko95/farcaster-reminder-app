@@ -26,6 +26,11 @@
   <!-- Farcaster Miniapps SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
+  <!-- Farcaster Mini App Embed -->
+  <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_miniapp","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
+  <!-- Geriye dönük uyumluluk -->
+  <meta name="fc:frame"   content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_frame","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
+
   <style>
     :root {
       --bg-page: #fffbf0;
