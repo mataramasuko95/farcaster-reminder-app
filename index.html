@@ -346,8 +346,12 @@
 
       const bottom = document.createElement("div");
       bottom.className = "reminder-bottom-row";
+
+      /* ---- DÜZELTME #1: backtick ile template string ---- */
       const payInfo = document.createElement("div");
       payInfo.textContent = `Payment draft: ${r.ethNeeded} ETH (~$${USD_AMOUNT.toFixed(2)})`;
+      /* --------------------------------------------------- */
+
       bottom.appendChild(payInfo);
 
       card.appendChild(top);
@@ -487,6 +491,7 @@
   function formatDateTime(yyyyMmDd, hhmm) {
     // Input: "yyyy-mm-dd", "hh:mm"
     // Output: "yyyy-mm-dd hh:mm"
+    /* ---- DÜZELTME #2: backtick ile template string ---- */
     return `${yyyyMmDd} ${hhmm}`;
   }
 
