@@ -1,18 +1,16 @@
 {
-  "id": "farcaster-reminder-app",
+  "id": "ureminder-app",
   "name": "Reminder",
   "description": "Save reminders with a timestamp. Generates a small payment draft for you when you save.",
-  "icon": "https://farcaster-reminder-app.vercel.app/icon.png",
+  "icon": "https://ureminder-app.vercel.app/icon.png",
   "developer": {
-    "name": "mataramasuko95",
+    "name": "ureminder",
     "url": "https://ureminder-app.vercel.app/"
   },
   "website": "https://ureminder-app.vercel.app/",
-  "platforms": [
-    "warpcast"
-  ],
+  "platforms": ["warpcast"],
   "endpoints": {
-    "pay": "https://farcaster-reminder-app.vercel.app/api/pay"
+    "pay": "https://ureminder-app.vercel.app/api/pay"
   },
   "actions": [
     {
@@ -23,26 +21,12 @@
       "input": {
         "type": "object",
         "properties": {
-          "fid": {
-            "type": "number",
-            "description": "User's Farcaster FID"
-          },
-          "usdAmount": {
-            "type": "number",
-            "description": "How much USD-worth of ETH to send (e.g. 0.05)"
-          },
-          "ethAddress": {
-            "type": "string",
-            "description": "Recipient wallet address"
-          }
+          "fid": { "type": "number", "description": "User's Farcaster FID" },
+          "usdAmount": { "type": "number", "description": "How much USD-worth of ETH to send (e.g. 0.05)" },
+          "ethAddress": { "type": "string", "description": "Recipient wallet address" }
         },
         "required": ["fid", "usdAmount", "ethAddress"]
       }
     }
-  ],
-  "accountAssociation": {
-    "header": "eyJmaWQiOjEwMDEyODcsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg1N0JGMzk0QjFEMjMzNkRFQTBEZTQxZTc0QWEwOWIwOTJEN2VkNUMwIn0",
-    "payload": "eyJkb21haW4iOiJmYXJjYXN0ZXItcmVtaW5kZXItYXBwLnZlcmNlbC5hcHAifQ",
-    "signature": "QjATFkvMRrGsmMfvkd4iFfcLgsvgHF8g61DNPVmoakNUjelKl1NWdaW3zWvmLjK2r03FZRqKMmQHGMaN5JZJCxw="
-  }
+  ]
 }
