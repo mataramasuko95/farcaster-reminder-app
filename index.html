@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://ureminder-app.vercel.app/home.png" />
   <!-- ========================================================== -->
 
-  <!-- Farcaster Miniapps SDK -->
+  <!-- Farcaster Miniapps SDK (eski CDN, dokunmadım) -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
   <!-- Farcaster Mini App Embed -->
@@ -519,7 +519,7 @@
     const btn = document.getElementById("saveBtn");
     btn.addEventListener("click", onSaveClicked);
 
-    // tell Warpcast / Farcaster "we are ready" so splash screen can go away
+    // eski fallback (dokunmadım)
     try {
       if (
         window.miniapps &&
@@ -543,7 +543,18 @@
 
   window.onload = init;
 </script>
+
+<!-- ✅ YENİ: Resmi SDK ile kesin ready() çağrısı -->
+<script type="module">
+  import { sdk } from "https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/+esm";
+  try {
+    await sdk.actions.ready();
+  } catch (e) {
+    console.warn("miniapp-sdk ready() failed:", e);
+  }
+</script>
 </body>
 </html>
+
 
 
