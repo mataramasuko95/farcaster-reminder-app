@@ -8,7 +8,7 @@
   />
   <title>Reminder</title>
 
-  <!-- ================== EMBED META (EKLENDİ) ================== -->
+  <!-- ================== EMBED META (EKLİ) ================== -->
   <meta name="description" content="Save reminders with a timestamp. Generates a small payment draft." />
   <meta property="og:title" content="Reminder" />
   <meta property="og:description" content="Save reminders with a timestamp. Generates a small payment draft." />
@@ -21,15 +21,19 @@
   <meta name="twitter:title" content="Reminder" />
   <meta name="twitter:description" content="Save reminders with a timestamp. Generates a small payment draft." />
   <meta name="twitter:image" content="https://ureminder-app.vercel.app/home.png" />
-  <!-- ========================================================== -->
+  <!-- ====================================================== -->
 
-  <!-- Farcaster Miniapps SDK (eski CDN, dokunmadım) -->
+  <!-- Farcaster Miniapps SDK (eski js paketi – kalıyor) -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
   <!-- Farcaster Mini App Embed -->
   <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_miniapp","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
   <!-- Geriye dönük uyumluluk -->
   <meta name="fc:frame"   content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_frame","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
+
+  <!-- (YENİ) App icon/Touch icon – sadece EKLENDİ -->
+  <link rel="icon" type="image/png" href="/icon.png" sizes="512x512">
+  <link rel="apple-touch-icon" href="/icon.png">
 
   <style>
     :root {
@@ -367,9 +371,9 @@
       const bottom = document.createElement("div");
       bottom.className = "reminder-bottom-row";
       const payInfo = document.createElement("div");
-      /* ---- DÜZELTME #1: backtick ile template string ---- */
+      /* ---- DÜZELTME #1 (vardı) : backtick ile template string ---- */
       payInfo.textContent = `Payment draft: ${r.ethNeeded} ETH (~$${USD_AMOUNT.toFixed(2)})`;
-      /* --------------------------------------------------- */
+      /* ------------------------------------------------------------ */
 
       bottom.appendChild(payInfo);
 
@@ -510,7 +514,7 @@
   function formatDateTime(yyyyMmDd, hhmm) {
     // Input: "yyyy-mm-dd", "hh:mm"
     // Output: "yyyy-mm-dd hh:mm"
-    /* ---- DÜZELTME #2: backtick ile template string ---- */
+    /* ---- DÜZELTME #2 (vardı): backtick ile template string ---- */
     return `${yyyyMmDd} ${hhmm}`;
   }
 
@@ -519,7 +523,7 @@
     const btn = document.getElementById("saveBtn");
     btn.addEventListener("click", onSaveClicked);
 
-    // eski fallback (dokunmadım)
+    // tell Warpcast / Farcaster "we are ready" so splash screen can go away
     try {
       if (
         window.miniapps &&
@@ -544,17 +548,23 @@
   window.onload = init;
 </script>
 
-<!-- ✅ YENİ: Resmi SDK ile kesin ready() çağrısı -->
+<!-- (YENİ) Resmî MiniApp SDK ile kesin ready() çağrısı – SADECE EKLENDİ -->
 <script type="module">
-  import { sdk } from "https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/+esm";
-  try {
-    await sdk.actions.ready();
-  } catch (e) {
-    console.warn("miniapp-sdk ready() failed:", e);
-  }
+  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+  window.addEventListener('load', async () => {
+    try {
+      await sdk.actions.ready();
+      // console.log('Miniapp ready() called via ESM SDK');
+    } catch (e) {
+      console.warn('sdk.actions.ready() failed', e);
+    }
+  });
 </script>
+
 </body>
 </html>
+
 
 
 
