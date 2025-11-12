@@ -10,7 +10,7 @@
     "splashImageUrl": "https://ureminder-app.vercel.app/icon.png",
     "splashBackgroundColor": "#FDF3D0",
 
-    "subtitle": "Save reminders with a timestamp.",
+    "subtitle": "Save reminders",
     "description": "Save reminders with a timestamp. Generates a small ETH payment draft when you save.",
     "primaryCategory": "utility",
     "tags": ["productivity", "reminder"],
