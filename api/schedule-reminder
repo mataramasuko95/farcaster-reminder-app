@@ -1,0 +1,30 @@
+// /pages/api/schedule-reminder.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+const QSTASH_URL = 'https://qstash.upstash.io/v2/publish' // env’den alın
+const QSTASH_TOKEN = process.env.QSTASH_TOKEN!             // Bearer token
+const SEND_URL = 'https://ureminder-app.vercel.app/api/send-notification'
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { fid, note, remindAtIso } = req.body as { fid:number; note:string; remindAtIso:string }
+  if (!fid || !note || !remindAtIso) return res.status(400).end('bad request')
+
+  const delaySeconds = Math.max(0, Math.floor((new Date(remindAtIso).getTime() - Date.now())/1000))
+
+  const r = await fetch(QSTASH_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${QSTASH_TOKEN}`,
+      'Upstash-Delay': `${delaySeconds}s`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      url: SEND_URL,
+      body: { fid, note }, // send-notification endpoint’ine dönecek payload
+      headers: { 'Content-Type': 'application/json' }
+    })
+  })
+
+  if (!r.ok) return res.status(500).end('qstash failed')
+  res.status(200).json({ ok:true })
+}
