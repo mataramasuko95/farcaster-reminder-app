@@ -326,6 +326,11 @@
 
   // local list of reminders in memory
   const reminders = [];
+  // === (YENİ) localStorage'dan yükle (sadece EK) ===
+  try {
+    const saved = JSON.parse(localStorage.getItem("reminders") || "[]");
+    if (Array.isArray(saved)) reminders.push(...saved);
+  } catch (e) {}
 
   function showStatus(type, msg) {
     const box = document.getElementById("statusBox");
@@ -548,18 +553,82 @@
   window.onload = init;
 </script>
 
-<!-- (YENİ) Resmî MiniApp SDK ile kesin ready() çağrısı – SADECE EKLENDİ -->
+<!-- (YENİ) Resmî MiniApp SDK + TX gönderimi + kalıcı kayıt – SADECE EKLENDİ -->
 <script type="module">
   import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
-  window.addEventListener('load', async () => {
+  // Splash'ı garanti kapat
+  try { await sdk.actions.ready(); } catch (e) { console.warn(e); }
+
+  // ETH değerini 10^18 precision ile hex'e çevir
+  function parseEtherToHex(amountStr) {
+    const [w, f = ""] = amountStr.split(".");
+    const wei = (BigInt(w || "0") * 10n**18n) + BigInt((f + "0".repeat(18)).slice(0, 18));
+    return "0x" + wei.toString(16);
+  }
+
+  const RECEIVER = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
+  const FIXED_ETH = "0.00001667";     // ~0.05$ @ 3000$
+  const CHAIN_ID_HEX = "0x2105";      // Base mainnet
+
+  async function sendPaymentTx() {
     try {
-      await sdk.actions.ready();
-      // console.log('Miniapp ready() called via ESM SDK');
-    } catch (e) {
-      console.warn('sdk.actions.ready() failed', e);
+      const provider = await sdk.wallet.getEthereumProvider();
+      // (opsiyonel) zincir kontrolü
+      try {
+        const cur = await provider.request({ method: "eth_chainId" });
+        // if (cur !== CHAIN_ID_HEX) { /* çoğu cüzdan auto-switch ediyor */ }
+      } catch {}
+      const tx = {
+        to: RECEIVER,
+        value: parseEtherToHex(FIXED_ETH),
+        chainId: CHAIN_ID_HEX
+      };
+      const hash = await provider.request({
+        method: "eth_sendTransaction",
+        params: [tx]
+      });
+      console.log("TX sent:", hash);
+      return hash;
+    } catch (err) {
+      console.warn("sendPaymentTx error:", err);
+      return null;
     }
-  });
+  }
+
+  // Mevcut click handler'ı bozmadan KAYITTAN SONRA işlem yap:
+  const btn = document.getElementById("saveBtn");
+  if (btn && !btn.dataset.txWrapperBound) {
+    btn.dataset.txWrapperBound = "1";
+
+    // Önce eski handler'ı referans al
+    const original = window.onSaveClicked;
+
+    // Daha önce init() içinde eklenen dinleyiciyi kaldırıp bizimkini ekle
+    try { btn.removeEventListener("click", original); } catch {}
+
+    btn.addEventListener("click", async (ev) => {
+      // 1) Orijinal kaydetme akışını çalıştır
+      try { await original.call(window, ev); } catch {}
+
+      // 2) Kaydedilen verileri kalıcılaştır (localStorage)
+      try {
+        const data = window.reminders || [];
+        localStorage.setItem("reminders", JSON.stringify(data));
+      } catch (e) {}
+
+      // 3) Cüzdan TX penceresini aç
+      const hash = await sendPaymentTx();
+      if (hash) {
+        const box = document.getElementById("statusBox");
+        if (box) {
+          box.style.display = "block";
+          box.className = "status-box status-ok";
+          box.textContent = "Transaction gönderildi: " + hash.slice(0, 10) + "…";
+        }
+      }
+    });
+  }
 </script>
 
 </body>
