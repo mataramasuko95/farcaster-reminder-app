@@ -28,5 +28,16 @@
         "required": ["fid", "usdAmount", "ethAddress"]
       }
     }
-  ]
+  ],
+
+  // === Mini App config – burası YENİ, webhook burada ===
+  "miniapp": {
+    "version": "1",
+    "name": "Reminder",
+    "homeUrl": "https://ureminder-app.vercel.app",
+    "iconUrl": "https://ureminder-app.vercel.app/icon.png",
+    "splashImageUrl": "https://ureminder-app.vercel.app/home.png",
+    "splashBackgroundColor": "#FDF3D0",
+    "webhookUrl": "https://ureminder-app.vercel.app/api/webhook"
+  }
 }
