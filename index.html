@@ -268,7 +268,7 @@
       <div class="emoji-bell">🔔</div>
       <h1>Farcaster Reminder</h1>
       <div class="subtext">
-        Write a reminder and pick a date/time. Save will prepare a payment draft.
+        Write a reminder and pick a date/time. 
       </div>
     </div>
 
@@ -373,14 +373,10 @@
       top.appendChild(noteEl);
       top.appendChild(whenEl);
 
-      const bottom = document.createElement("div");
-      bottom.className = "reminder-bottom-row";
-      const payInfo = document.createElement("div");
-      payInfo.textContent = `Payment draft: ${r.ethNeeded} ETH (~$${USD_AMOUNT.toFixed(2)})`;
-      bottom.appendChild(payInfo);
-
       card.appendChild(top);
-      card.appendChild(bottom);
+
+      // *** ALTTAKİ PAYMENT DRAFT SATIRI KALDIRILDI ***
+      // (bottom/payInfo oluşturulmadı)
 
       list.appendChild(card);
     });
@@ -595,6 +591,7 @@
 
 </body>
 </html>
+
 
 
 
