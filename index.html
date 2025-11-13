@@ -29,7 +29,7 @@
   <!-- Farcaster Mini App Embed -->
   <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_miniapp","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
   <!-- Geriye dönük uyumluluk -->
-  <meta name="fc:frame"   content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_frame","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
+  <meta name="fc:frame" content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_frame","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
 
   <!-- (YENİ) App icon/Touch icon – sadece EKLENDİ -->
   <link rel="icon" type="image/png" href="/icon.png" sizes="512x512">
@@ -485,6 +485,7 @@
   }
 
   function formatDateTime(yyyyMmDd, hhmm) {
+    // <- burası bozuktu, template literal ile düzelttim
     return `${yyyyMmDd} ${hhmm}`;
   }
 
@@ -560,7 +561,8 @@
       to: RECEIVER,
       value,
       chainId: BASE_CHAIN_ID_HEX,
-      ...(gas ? { gas } : {})
+      ...(gas ? { gas } : {}
+      )
     };
 
     // Gönder
@@ -589,8 +591,33 @@
   }
 </script>
 
+<!-- (YENİ) 2. madde: kullanıcıdan bildirim izni iste -->
+<script type="module">
+  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+  async function ensureNotificationGrant() {
+    try {
+      // Kullanıcı zaten izin verdiyse no-op; değilse izin akışını açar
+      await sdk.notifications.request();
+      // İstersen durum kontrolü:
+      // const granted = await sdk.notifications.isGranted();
+      // console.log('notif granted?', granted);
+    } catch (e) {
+      console.warn('notifications.request failed', e);
+    }
+  }
+
+  // Save'e basılmadan hemen önce çağır:
+  const btn = document.getElementById('saveBtn');
+  if (btn && !btn.dataset.notifBound) {
+    btn.dataset.notifBound = '1';
+    btn.addEventListener('click', ensureNotificationGrant, { capture: true });
+  }
+</script>
+
 </body>
 </html>
+
 
 
 
