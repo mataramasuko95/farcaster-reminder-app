@@ -30,7 +30,6 @@
     }
   ],
 
-  // === Mini App config – burası YENİ, webhook burada ===
   "miniapp": {
     "version": "1",
     "name": "Reminder",
