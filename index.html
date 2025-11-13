@@ -48,7 +48,7 @@
       --radius-sm: 6px;
       --shadow-card: 0 20px 40px rgba(0,0,0,0.06);
       --shadow-btn: 0 8px 20px rgba(0,0,0,0.12);
-      --font-stack: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+      --font-stack: -apple-system, BlinkMacSystemFont, "Inter", system ui, sans-serif;
     }
 
     body {
@@ -326,7 +326,7 @@
 
   // local list of reminders in memory
   const reminders = [];
-  // === (YENİ) localStorage'dan yükle (sadece EK) ===
+  // === (YENİ) localStorage'dan yükle ===
   try {
     const saved = JSON.parse(localStorage.getItem("reminders") || "[]");
     if (Array.isArray(saved)) reminders.push(...saved);
@@ -376,10 +376,7 @@
       const bottom = document.createElement("div");
       bottom.className = "reminder-bottom-row";
       const payInfo = document.createElement("div");
-      /* ---- DÜZELTME #1 (vardı) : backtick ile template string ---- */
       payInfo.textContent = `Payment draft: ${r.ethNeeded} ETH (~$${USD_AMOUNT.toFixed(2)})`;
-      /* ------------------------------------------------------------ */
-
       bottom.appendChild(payInfo);
 
       card.appendChild(top);
@@ -390,38 +387,24 @@
   }
 
   function fakeUsdToEth(usdAmount) {
-    // Super rough conversion: assume ~3000 USD per 1 ETH.
     const ETH_PER_USD = 1 / 3000;
     const ethVal = usdAmount * ETH_PER_USD;
-    return ethVal.toFixed(8); // up to 8 decimals
+    return ethVal.toFixed(8);
   }
 
   async function createPaymentDraft({ fid, usdAmount, ethAddress }) {
-    // calls our /api/pay with required body
-    const body = {
-      fid,
-      usdAmount,
-      ethAddress
-    };
-
+    const body = { fid, usdAmount, ethAddress };
     const res = await fetch("/api/pay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-
-    if (!res.ok) {
-      throw new Error("Server error " + res.status);
-    }
+    if (!res.ok) throw new Error("Server error " + res.status);
     return res.json();
   }
 
   async function tryGetFidAndWallet() {
-    // Try to get Farcaster user info from the miniapp environment.
-    // If running outside Warpcast in a normal browser, we'll just fail gracefully.
-    let fid = null;
-    let wallet = null;
-
+    let fid = null, wallet = null;
     try {
       if (window.miniapps && typeof window.miniapps.user === "function") {
         const u = await window.miniapps.user();
@@ -431,7 +414,6 @@
     } catch (err) {
       console.warn("miniapps.user() failed / not available:", err);
     }
-
     return { fid, wallet };
   }
 
@@ -439,28 +421,22 @@
     clearStatus();
 
     const note = document.getElementById("noteInput").value.trim();
-    const dateVal = document.getElementById("dateInput").value; // yyyy-mm-dd
-    const timeVal = document.getElementById("timeInput").value; // hh:mm
+    const dateVal = document.getElementById("dateInput").value;
+    const timeVal = document.getElementById("timeInput").value;
 
     if (!note || !dateVal || !timeVal) {
       showStatus("error", "Please fill note, date, and time.");
       return;
     }
 
-    // Combine date+time into a readable string
     const whenFormatted = formatDateTime(dateVal, timeVal);
 
-    // get user fid + wallet (if available via miniapps)
     const { fid, wallet } = await tryGetFidAndWallet();
-
-    // fallback if not provided
     const fallbackFid = fid || 1234;
     const fromWallet = wallet || "0xUSER_WALLET_PLACEHOLDER";
 
-    // figure out required ETH for the tiny micro-payment
     const ethNeeded = fakeUsdToEth(USD_AMOUNT);
 
-    // call backend to make the payment draft
     let draftResp;
     try {
       draftResp = await createPaymentDraft({
@@ -476,27 +452,20 @@
 
     console.log("Draft response:", draftResp);
 
-    // (Optional / best effort) try to open Warpcast's wallet UI:
     try {
       if (window.miniapps && typeof window.miniapps.pay === "function") {
         await window.miniapps.pay({
           to: RECEIVER_ETH_ADDRESS,
           valueEth: ethNeeded,
           note: "Reminder fee"
-          // In a real mini app you'd include chainId / data etc.
         });
       } else {
-        console.log(
-          "[dev] window.miniapps.pay not available. " +
-          "In Warpcast this should open wallet UI."
-        );
+        console.log("[dev] window.miniapps.pay not available.");
       }
     } catch (err) {
       console.warn("miniapps.pay() threw:", err);
-      // We don't block saving if user rejects or wallet is unavailable
     }
 
-    // Save reminder locally so it shows in the list
     reminders.unshift({
       note,
       whenFormatted,
@@ -504,6 +473,9 @@
       fromWallet,
       fid: fallbackFid
     });
+
+    // kalıcılaştır
+    try { localStorage.setItem("reminders", JSON.stringify(reminders)); } catch (e) {}
 
     renderReminders();
     showStatus("ok", "Reminder saved and payment draft prepared.");
@@ -517,30 +489,17 @@
   }
 
   function formatDateTime(yyyyMmDd, hhmm) {
-    // Input: "yyyy-mm-dd", "hh:mm"
-    // Output: "yyyy-mm-dd hh:mm"
-    /* ---- DÜZELTME #2 (vardı): backtick ile template string ---- */
     return `${yyyyMmDd} ${hhmm}`;
   }
 
   function init() {
-    // attach click handler
     const btn = document.getElementById("saveBtn");
     btn.addEventListener("click", onSaveClicked);
 
-    // tell Warpcast / Farcaster "we are ready" so splash screen can go away
     try {
-      if (
-        window.miniapps &&
-        window.miniapps.actions &&
-        typeof window.miniapps.actions.ready === "function"
-      ) {
+      if (window.miniapps && window.miniapps.actions && typeof window.miniapps.actions.ready === "function") {
         window.miniapps.actions.ready();
-      } else if (
-        window.sdk &&
-        window.sdk.actions &&
-        typeof window.sdk.actions.ready === "function"
-      ) {
+      } else if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === "function") {
         window.sdk.actions.ready();
       }
     } catch (err) {
@@ -553,80 +512,83 @@
   window.onload = init;
 </script>
 
-<!-- (YENİ) Resmî MiniApp SDK + TX gönderimi + kalıcı kayıt – SADECE EKLENDİ -->
+<!-- (YENİ) Resmî MiniApp SDK + TAM DOLU TX (from/to/value/chainId/gas) -->
 <script type="module">
   import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
   // Splash'ı garanti kapat
   try { await sdk.actions.ready(); } catch (e) { console.warn(e); }
 
-  // ETH değerini 10^18 precision ile hex'e çevir
-  function parseEtherToHex(amountStr) {
-    const [w, f = ""] = amountStr.split(".");
-    const wei = (BigInt(w || "0") * 10n**18n) + BigInt((f + "0".repeat(18)).slice(0, 18));
+  // ===== Helpers =====
+  function toHex(n) { return "0x" + BigInt(n).toString(16); }
+  function parseEtherToHexFromUsd(usd, ethPrice = 3000) {
+    // 0.05 USD -> ETH
+    const eth = usd / ethPrice;
+    const wei = BigInt(Math.floor(eth * 1e18)); // hassasiyet yeterli
     return "0x" + wei.toString(16);
   }
 
   const RECEIVER = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
-  const FIXED_ETH = "0.00001667";     // ~0.05$ @ 3000$
-  const CHAIN_ID_HEX = "0x2105";      // Base mainnet
+  const BASE_CHAIN_ID_HEX = "0x2105"; // Base mainnet (8453)
 
-  async function sendPaymentTx() {
+  async function sendExactDraftTx() {
+    const provider = await sdk.wallet.getEthereumProvider();
+
+    // Hesap iste (from)
+    const accounts = await provider.request({ method: "eth_requestAccounts" });
+    const from = accounts?.[0];
+    if (!from) throw new Error("No wallet account");
+
+    // (opsiyonel) Base'e geç
     try {
-      const provider = await sdk.wallet.getEthereumProvider();
-      // (opsiyonel) zincir kontrolü
-      try {
-        const cur = await provider.request({ method: "eth_chainId" });
-        // if (cur !== CHAIN_ID_HEX) { /* çoğu cüzdan auto-switch ediyor */ }
-      } catch {}
-      const tx = {
-        to: RECEIVER,
-        value: parseEtherToHex(FIXED_ETH),
-        chainId: CHAIN_ID_HEX
-      };
-      const hash = await provider.request({
-        method: "eth_sendTransaction",
-        params: [tx]
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: BASE_CHAIN_ID_HEX }]
       });
-      console.log("TX sent:", hash);
-      return hash;
-    } catch (err) {
-      console.warn("sendPaymentTx error:", err);
-      return null;
+    } catch (e) {
+      // çoğu cüzdan zaten Base'te, hata verebilir — sorun değil
     }
+
+    // 0.05 USD -> value (wei, hex)
+    const value = parseEtherToHexFromUsd(0.05, 3000);
+
+    // Gas tahmini (detayların ekranda dolu görünmesi için iyi olur)
+    const gas = await provider.request({
+      method: "eth_estimateGas",
+      params: [{ from, to: RECEIVER, value }]
+    }).catch(() => null);
+
+    // EIP-1559 alanları opsiyonel; cüzdan çoğunlukla kendi belirler.
+    const tx = {
+      from,
+      to: RECEIVER,
+      value,
+      chainId: BASE_CHAIN_ID_HEX,
+      ...(gas ? { gas } : {})
+    };
+
+    // Gönder
+    const txHash = await provider.request({
+      method: "eth_sendTransaction",
+      params: [tx]
+    });
+
+    // kullanıcıya göster
+    const box = document.getElementById("statusBox");
+    if (box) {
+      box.style.display = "block";
+      box.className = "status-box status-ok";
+      box.textContent = "Transaction gönderildi: " + txHash.slice(0, 10) + "…";
+    }
+    return txHash;
   }
 
-  // Mevcut click handler'ı bozmadan KAYITTAN SONRA işlem yap:
+  // Save butonundan sonra bizim TX'i de tetikle
   const btn = document.getElementById("saveBtn");
-  if (btn && !btn.dataset.txWrapperBound) {
-    btn.dataset.txWrapperBound = "1";
-
-    // Önce eski handler'ı referans al
-    const original = window.onSaveClicked;
-
-    // Daha önce init() içinde eklenen dinleyiciyi kaldırıp bizimkini ekle
-    try { btn.removeEventListener("click", original); } catch {}
-
-    btn.addEventListener("click", async (ev) => {
-      // 1) Orijinal kaydetme akışını çalıştır
-      try { await original.call(window, ev); } catch {}
-
-      // 2) Kaydedilen verileri kalıcılaştır (localStorage)
-      try {
-        const data = window.reminders || [];
-        localStorage.setItem("reminders", JSON.stringify(data));
-      } catch (e) {}
-
-      // 3) Cüzdan TX penceresini aç
-      const hash = await sendPaymentTx();
-      if (hash) {
-        const box = document.getElementById("statusBox");
-        if (box) {
-          box.style.display = "block";
-          box.className = "status-box status-ok";
-          box.textContent = "Transaction gönderildi: " + hash.slice(0, 10) + "…";
-        }
-      }
+  if (btn && !btn.dataset.txBound) {
+    btn.dataset.txBound = "1";
+    btn.addEventListener("click", async () => {
+      try { await sendExactDraftTx(); } catch (e) { console.warn(e); }
     });
   }
 </script>
