@@ -23,15 +23,13 @@
   <meta name="twitter:image" content="https://ureminder-app.vercel.app/home.png" />
   <!-- ====================================================== -->
 
-  <!-- Farcaster Miniapps SDK -->
+  <!-- Farcaster Miniapps SDK (eski js paketi – kalıyor) -->
   <script src="https://cdn.jsdelivr.net/npm/@farcaster/js@latest"></script>
 
   <!-- Farcaster Mini App Embed -->
   <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://ureminder-app.vercel.app/home.png","button":{"title":"Open Reminder","action":{"type":"launch_miniapp","name":"Reminder","url":"https://ureminder-app.vercel.app","splashImageUrl":"https://ureminder-app.vercel.app/icon.png","splashBackgroundColor":"#FDF3D0"}}}'>
-
-  <!-- (fc:frame META TAGI KALDIRILDI) -->
-
-  <!-- (YENİ) App icon/Touch icon -->
+  
+  <!-- (YENİ) App icon/Touch icon – sadece EKLENDİ -->
   <link rel="icon" type="image/png" href="/icon.png" sizes="512x512">
   <link rel="apple-touch-icon" href="/icon.png">
 
@@ -71,6 +69,7 @@
       padding: 24px;
     }
 
+    /* header */
     .heading {
       text-align: center;
       margin-bottom: 16px;
@@ -94,6 +93,7 @@
       color: var(--text-dim);
     }
 
+    /* form groups */
     .field-block {
       margin-bottom: 16px;
       width: 100%;
@@ -152,6 +152,7 @@
       flex: 1;
     }
 
+    /* save button */
     .save-wrapper {
       margin-top: 8px;
       margin-bottom: 20px;
@@ -175,6 +176,7 @@
       transform: scale(0.99);
     }
 
+    /* status / error box */
     .status-box {
       display: none;
       margin-bottom: 20px;
@@ -194,6 +196,7 @@
       color: #04502f;
     }
 
+    /* saved reminders list */
     .saved-panel {
       background: #fff9e6;
       border: 1px solid var(--panel-border);
@@ -258,16 +261,19 @@
 <body>
   <div class="app-shell">
 
+    <!-- header -->
     <div class="heading">
       <div class="emoji-bell">🔔</div>
       <h1>Reminder</h1>
       <div class="subtext">
-        Write a reminder and pick a date/time.
+        Write a reminder and pick a date/time. 
       </div>
     </div>
 
+    <!-- status box (hidden by default, JS shows it) -->
     <div id="statusBox" class="status-box"></div>
 
+    <!-- form -->
     <div class="field-block">
       <div class="label-row">
         <label for="noteInput">Reminder Note</label>
@@ -299,6 +305,7 @@
       <button id="saveBtn" class="btn-save">Save</button>
     </div>
 
+    <!-- saved reminders list -->
     <div class="saved-panel">
       <div class="saved-header">Saved Reminders</div>
       <div id="savedList">
@@ -308,11 +315,16 @@
 
   </div>
 
-<script>
+  <script>
+  // hard-coded receiver wallet (your address)
   const RECEIVER_ETH_ADDRESS = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
+
+  // pretend fixed $0.05, convert -> ETH (rough fake rate)
   const USD_AMOUNT = 0.05;
 
+  // local list of reminders in memory
   const reminders = [];
+  // === (YENİ) localStorage'dan yükle ===
   try {
     const saved = JSON.parse(localStorage.getItem("reminders") || "[]");
     if (Array.isArray(saved)) reminders.push(...saved);
@@ -360,6 +372,10 @@
       top.appendChild(whenEl);
 
       card.appendChild(top);
+
+      // *** ALTTAKİ PAYMENT DRAFT SATIRI KALDIRILDI ***
+      // (bottom/payInfo oluşturulmadı)
+
       list.appendChild(card);
     });
   }
@@ -428,6 +444,8 @@
       return;
     }
 
+    console.log("Draft response:", draftResp);
+
     try {
       if (window.miniapps && typeof window.miniapps.pay === "function") {
         await window.miniapps.pay({
@@ -435,6 +453,8 @@
           valueEth: ethNeeded,
           note: "Reminder fee"
         });
+      } else {
+        console.log("[dev] window.miniapps.pay not available.");
       }
     } catch (err) {
       console.warn("miniapps.pay() threw:", err);
@@ -448,6 +468,7 @@
       fid: fallbackFid
     });
 
+    // kalıcılaştır
     try { localStorage.setItem("reminders", JSON.stringify(reminders)); } catch (e) {}
 
     renderReminders();
@@ -462,16 +483,18 @@
   }
 
   function formatDateTime(yyyyMmDd, hhmm) {
+    // <- burası bozuktu, template literal ile düzelttim
     return `${yyyyMmDd} ${hhmm}`;
   }
 
   function init() {
-    document.getElementById("saveBtn").addEventListener("click", onSaveClicked);
+    const btn = document.getElementById("saveBtn");
+    btn.addEventListener("click", onSaveClicked);
 
     try {
-      if (window.miniapps?.actions?.ready) {
+      if (window.miniapps && window.miniapps.actions && typeof window.miniapps.actions.ready === "function") {
         window.miniapps.actions.ready();
-      } else if (window.sdk?.actions?.ready) {
+      } else if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === "function") {
         window.sdk.actions.ready();
       }
     } catch (err) {
@@ -484,54 +507,69 @@
   window.onload = init;
 </script>
 
+<!-- (YENİ) Resmî MiniApp SDK + TAM DOLU TX (from/to/value/chainId/gas) -->
 <script type="module">
   import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
+  // Splash'ı garanti kapat
   try { await sdk.actions.ready(); } catch (e) { console.warn(e); }
 
+  // ===== Helpers =====
   function toHex(n) { return "0x" + BigInt(n).toString(16); }
   function parseEtherToHexFromUsd(usd, ethPrice = 3000) {
+    // 0.05 USD -> ETH
     const eth = usd / ethPrice;
-    const wei = BigInt(Math.floor(eth * 1e18));
+    const wei = BigInt(Math.floor(eth * 1e18)); // hassasiyet yeterli
     return "0x" + wei.toString(16);
   }
 
   const RECEIVER = "0xfA34687f5BdCF7DcBeBbF00e7A81c38188cf6772";
-  const BASE_CHAIN_ID_HEX = "0x2105";
+  const BASE_CHAIN_ID_HEX = "0x2105"; // Base mainnet (8453)
 
   async function sendExactDraftTx() {
     const provider = await sdk.wallet.getEthereumProvider();
+
+    // Hesap iste (from)
     const accounts = await provider.request({ method: "eth_requestAccounts" });
     const from = accounts?.[0];
     if (!from) throw new Error("No wallet account");
 
+    // (opsiyonel) Base'e geç
     try {
       await provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: BASE_CHAIN_ID_HEX }]
       });
-    } catch (e) {}
+    } catch (e) {
+      // çoğu cüzdan zaten Base'te, hata verebilir — sorun değil
+    }
 
+    // 0.05 USD -> value (wei, hex)
     const value = parseEtherToHexFromUsd(0.05, 3000);
 
+    // Gas tahmini (detayların ekranda dolu görünmesi için iyi olur)
     const gas = await provider.request({
       method: "eth_estimateGas",
       params: [{ from, to: RECEIVER, value }]
     }).catch(() => null);
 
+    // EIP-1559 alanları opsiyonel; cüzdan çoğunlukla kendi belirler.
     const tx = {
       from,
       to: RECEIVER,
       value,
       chainId: BASE_CHAIN_ID_HEX,
-      ...(gas ? { gas } : {})
+      ...(gas ? { gas } : {}
+      )
     };
 
+    // Gönder
     const txHash = await provider.request({
       method: "eth_sendTransaction",
       params: [tx]
     });
 
+    // kullanıcıya göster
     const box = document.getElementById("statusBox");
     if (box) {
       box.style.display = "block";
@@ -541,6 +579,7 @@
     return txHash;
   }
 
+  // Save butonundan sonra bizim TX'i de tetikle
   const btn = document.getElementById("saveBtn");
   if (btn && !btn.dataset.txBound) {
     btn.dataset.txBound = "1";
@@ -550,27 +589,32 @@
   }
 </script>
 
+<!-- (YENİ) 2. madde: kullanıcıdan bildirim izni iste -->
 <script type="module">
   import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
   async function ensureNotificationGrant() {
     try {
+      // Kullanıcı zaten izin verdiyse no-op; değilse izin akışını açar
       await sdk.notifications.request();
+      // İstersen durum kontrolü:
+      // const granted = await sdk.notifications.isGranted();
+      // console.log('notif granted?', granted);
     } catch (e) {
       console.warn('notifications.request failed', e);
     }
   }
 
-  const btn2 = document.getElementById('saveBtn');
-  if (btn2 && !btn2.dataset.notifBound) {
-    btn2.dataset.notifBound = '1';
-    btn2.addEventListener('click', ensureNotificationGrant, { capture: true });
+  // Save'e basılmadan hemen önce çağır:
+  const btn = document.getElementById('saveBtn');
+  if (btn && !btn.dataset.notifBound) {
+    btn.dataset.notifBound = '1';
+    btn.addEventListener('click', ensureNotificationGrant, { capture: true });
   }
 </script>
 
 </body>
 </html>
-
 
 
 
