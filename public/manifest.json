@@ -1,56 +1,21 @@
 {
-  "id": "ureminder-app",
+  "version": "1",
+  
   "name": "Reminder",
-  "description": "Save reminders with a timestamp. Generates a small payment draft for you when you save.",
-  "icon": "https://ureminder-app.vercel.app/icon.png",
-
-  "developer": {
-    "name": "ureminder",
-    "url": "https://ureminder-app.vercel.app"
-  },
-
-  "website": "https://ureminder-app.vercel.app",
+  "description": "Save reminders with a timestamp. Includes optional tiny ETH payment & notifications.",
+  "iconUrl": "https://ureminder-app.vercel.app/icon.png",
+  "homeUrl": "https://ureminder-app.vercel.app",
+  "splashImageUrl": "https://ureminder-app.vercel.app/home.png",
+  "splashBackgroundColor": "#FDF3D0",
 
   "platforms": ["warpcast"],
 
-  "endpoints": {
-    "pay": "https://ureminder-app.vercel.app/api/pay"
-  },
+  "actions": [],
 
-  "actions": [
-    {
-      "type": "post",
-      "name": "Save Reminder + Create Payment Draft",
-      "description": "User writes a reminder and time. We draft a tiny onchain payment they can send.",
-      "endpoint": "pay",
-      "input": {
-        "type": "object",
-        "properties": {
-          "fid": { "type": "number", "description": "User's Farcaster FID" },
-          "usdAmount": { "type": "number", "description": "How much USD to send" },
-          "ethAddress": { "type": "string", "description": "Recipient wallet" }
-        },
-        "required": ["fid", "usdAmount", "ethAddress"]
-      }
-    }
-  ],
-
-  "miniapp": {
-    "version": "1",
-    "name": "Reminder",
-    "homeUrl": "https://ureminder-app.vercel.app",
-    "iconUrl": "https://ureminder-app.vercel.app/icon.png",
-    "splashImageUrl": "https://ureminder-app.vercel.app/home.png",
-    "splashBackgroundColor": "#FDF3D0",
-    "webhookUrl": "https://ureminder-app.vercel.app/api/webhook",
-
-    "permissions": {
-      "notifications": true,
-      "wallet": true
-    },
-
+  "permissions": {
     "notifications": {
-      "enabled": true
+      "type": "push",
+      "webhookUrl": "https://ureminder-app.vercel.app/api/webhook"
     }
   }
 }
