@@ -3,15 +3,20 @@
   "name": "Reminder",
   "description": "Save reminders with a timestamp. Generates a small payment draft for you when you save.",
   "icon": "https://ureminder-app.vercel.app/icon.png",
+
   "developer": {
     "name": "ureminder",
     "url": "https://ureminder-app.vercel.app"
   },
+
   "website": "https://ureminder-app.vercel.app",
+
   "platforms": ["warpcast"],
+
   "endpoints": {
     "pay": "https://ureminder-app.vercel.app/api/pay"
   },
+
   "actions": [
     {
       "type": "post",
@@ -37,6 +42,15 @@
     "iconUrl": "https://ureminder-app.vercel.app/icon.png",
     "splashImageUrl": "https://ureminder-app.vercel.app/home.png",
     "splashBackgroundColor": "#FDF3D0",
-    "webhookUrl": "https://ureminder-app.vercel.app/api/webhook"
+    "webhookUrl": "https://ureminder-app.vercel.app/api/webhook",
+
+    "permissions": {
+      "notifications": true,
+      "wallet": true
+    },
+
+    "notifications": {
+      "enabled": true
+    }
   }
 }
