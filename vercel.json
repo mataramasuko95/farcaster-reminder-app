@@ -1,11 +1,8 @@
 {
-  "_trigger": "deploy-1",
-
   "routes": [
     { "src": "^/$", "dest": "/api/index.js" },
     { "src": "^/api/pay$", "dest": "/api/pay.js" }
   ],
-
   "redirects": [
     {
       "source": "/.well-known/farcaster.json",
