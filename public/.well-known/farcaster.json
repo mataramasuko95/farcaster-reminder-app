@@ -27,13 +27,10 @@
     }
   },
 
-  "permissions": {
-    "notifications": true
-  },
-
   "accountAssociation": {
     "header": "eyJmaWQiOjEwMDEyODcsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgyMjdhYjg5MThENmQyNkE5NTk1MDczN2JiNWU2ZjRmNmE3NDYzN2Y0In0",
     "payload": "eyJkb21haW4iOiJ1cmVtaW5kZXItYXBwLnZlcmNlbC5hcHAifQ",
     "signature": "vgrOYYINJzX77j/OhfiKff5DuMetS7aTtrcpCfCGpDViHYOYsM/xYML3wc6jT1wEm6iFEfEd4o2tIM55gP5pbhs="
   }
 }
+
