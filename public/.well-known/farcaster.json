@@ -1,36 +1,7 @@
 {
-  "miniapp": {
-    "version": "1",
-    "name": "Reminder",
-    "homeUrl": "https://ureminder-app.vercel.app",
-    "iconUrl": "https://ureminder-app.vercel.app/icon.png",
-    "buttonTitle": "Open Reminder",
-
-    "imageUrl": "https://ureminder-app.vercel.app/home.png",
-    "splashImageUrl": "https://ureminder-app.vercel.app/icon.png",
-    "splashBackgroundColor": "#FDF3D0",
-
-    "subtitle": "Save reminders",
-    "description": "Save reminders with a timestamp. Generates a small ETH payment draft when you save.",
-    "primaryCategory": "utility",
-    "tags": ["productivity", "reminder"],
-
-    "ogTitle": "Set a reminder",
-    "ogDescription": "Save reminders with a timestamp. Generates a small ETH payment draft when you save.",
-    "ogImageUrl": "https://ureminder-app.vercel.app/home.png"
-  },
-
-  "capabilities": {
-    "notifications": {
-      "version": "1",
-      "webhookUrl": "https://ureminder-app.vercel.app/api/webhook"
-    }
-  },
-
   "accountAssociation": {
     "header": "eyJmaWQiOjEwMDEyODcsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgyMjdhYjg5MThENmQyNkE5NTk1MDczN2JiNWU2ZjRmNmE3NDYzN2Y0In0",
     "payload": "eyJkb21haW4iOiJ1cmVtaW5kZXItYXBwLnZlcmNlbC5hcHAifQ",
     "signature": "vgrOYYINJzX77j/OhfiKff5DuMetS7aTtrcpCfCGpDViHYOYsM/xYML3wc6jT1wEm6iFEfEd4o2tIM55gP5pbhs="
   }
 }
-
