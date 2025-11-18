@@ -1,9 +1,11 @@
 {
-  "//": "force deploy",
+  "__comment": "force deploy ",
+
   "routes": [
     { "src": "^/$", "dest": "/api/index.js" },
     { "src": "^/api/pay$", "dest": "/api/pay.js" }
   ],
+
   "redirects": [
     {
       "source": "/.well-known/farcaster.json",
