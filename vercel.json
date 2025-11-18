@@ -1,5 +1,5 @@
 {
-  "__comment": "force deploy ",
+  "_trigger": "deploy-1",
 
   "routes": [
     { "src": "^/$", "dest": "/api/index.js" },
