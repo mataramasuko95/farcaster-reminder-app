@@ -27,6 +27,10 @@
     }
   },
 
+  "permissions": {
+    "notifications": true
+  },
+
   "accountAssociation": {
     "header": "eyJmaWQiOjEwMDEyODcsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgyMjdhYjg5MThENmQyNkE5NTk1MDczN2JiNWU2ZjRmNmE3NDYzN2Y0In0",
     "payload": "eyJkb21haW4iOiJ1cmVtaW5kZXItYXBwLnZlcmNlbC5hcHAifQ",
