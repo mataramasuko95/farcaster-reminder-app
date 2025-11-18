@@ -1,5 +1,5 @@
 {
-  // force deploy trigger
+  "_deploy": "trigger", 
   "routes": [
     { "src": "^/$", "dest": "/api/index.js" },
     { "src": "^/api/pay$", "dest": "/api/pay.js" }
