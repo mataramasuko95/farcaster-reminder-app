@@ -1,47 +1,27 @@
-// pages/api/webhook.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-
-// Demo: kalıcı DB yerine in-memory obje.
-// Gerçekte bunu KV/DB'ye yazman gerekecek.
-const MEMORY: Record<number, { granted: boolean }> = {};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  // Sadece POST kabul edelim
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).end('Method Not Allowed');
+// /api/webhook.js
+export default async function handler(req, res) {
+  // Warpcast bildirim sistemi webhook'a POST atar.
+  if (req.method !== "POST") {
+    return res.status(200).json({ ok: true, message: "Warpcast webhook endpoint is live." });
   }
 
-  // Base Mini Apps docs: bu 3 header ile çağrı doğrulanır
-  const assocHeader = req.headers[
-    'x-base-miniapp-account-association'
-  ] as string | undefined;
+  try {
+    const body = req.body;
 
-  const assocPayload = req.headers[
-    'x-base-miniapp-account-association-payload'
-  ] as string | undefined;
+    console.log("Webhook received:", body);
 
-  const assocSignature = req.headers[
-    'x-base-miniapp-account-association-signature'
-  ] as string | undefined;
+    // Warpcast ilk test request gönderdiğinde "challenge" içerir.
+    if (body?.challenge) {
+      return res.status(200).json({ challenge: body.challenge });
+    }
 
-  // Üretimde: assocHeader/payload/signature doğrula
-  // (docs'taki /api/pay örneğindekiyle aynı yöntem).
-  if (!assocHeader || !assocPayload || !assocSignature) {
-    return res.status(401).end('missing verification headers');
+    // Bildirim eventleri burada işlenir
+    // ör: notification.sent, subscription.created, vs.
+    console.log("Webhook event:", body);
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return res.status(500).json({ error: "Internal error" });
   }
-
-  // event = { type, data, fid, ... }
-  const event = req.body as { type?: string; fid?: number; data?: any };
-
-  // Örnek: { type: 'notifications.granted', fid: 12345 }
-  if (event?.type === 'notifications.granted' && typeof event.fid === 'number') {
-    MEMORY[event.fid] = { granted: true };
-    console.log('Notification permission granted for fid', event.fid);
-  }
-
-  return res.status(200).json({ ok: true });
 }
