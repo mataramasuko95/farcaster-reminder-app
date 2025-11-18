@@ -2,5 +2,12 @@
   "routes": [
     { "src": "^/$", "dest": "/api/index.js" },
     { "src": "^/api/pay$", "dest": "/api/pay.js" }
+  ],
+  "redirects": [
+    {
+      "source": "/.well-known/farcaster.json",
+      "destination": "https://api.farcaster.xyz/miniapps/hosted-manifest/019a97fc-afc7-87c3-0d4b-5b89cd78d396",
+      "permanent": false
+    }
   ]
 }
