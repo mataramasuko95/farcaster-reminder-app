@@ -1,7 +1,7 @@
 {
   "id": "ureminder-app",
   "name": "Reminder",
-  "description": "Save reminders with a timestamp. Generates a small payment draft for you when you save.",
+  "description": "Save reminders with a timestamp. Generates a small payment draft when you save.",
   "icon": "https://ureminder-app.vercel.app/icon.png",
 
   "developer": {
@@ -17,24 +17,44 @@
     "pay": "https://ureminder-app.vercel.app/api/pay"
   },
 
-  "actions": {
-    "notifications": {
-      "supports": true
+  "actions": [
+    {
+      "type": "post",
+      "name": "Save Reminder + Create Payment Draft",
+      "description": "Creates a small onchain payment draft.",
+      "endpoint": "pay",
+      "input": {
+        "type": "object",
+        "properties": {
+          "fid": { "type": "number" },
+          "usdAmount": { "type": "number" },
+          "ethAddress": { "type": "string" }
+        },
+        "required": ["fid", "usdAmount", "ethAddress"]
+      }
     }
-  },
+  ],
 
   "miniapp": {
     "version": "1",
     "name": "Reminder",
     "homeUrl": "https://ureminder-app.vercel.app",
     "iconUrl": "https://ureminder-app.vercel.app/icon.png",
-
     "imageUrl": "https://ureminder-app.vercel.app/home.png",
     "buttonTitle": "Open Reminder",
 
     "splashImageUrl": "https://ureminder-app.vercel.app/home.png",
     "splashBackgroundColor": "#FDF3D0",
 
-    "webhookUrl": "https://ureminder-app.vercel.app/api/webhook"
+    "webhookUrl": "https://ureminder-app.vercel.app/api/webhook",
+
+    "permissions": {
+      "notifications": true,
+      "wallet": true
+    },
+
+    "notifications": {
+      "enabled": true
+    }
   }
 }
